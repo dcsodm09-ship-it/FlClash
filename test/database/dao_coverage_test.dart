@@ -45,29 +45,62 @@ void main() {
         autoUpdateDuration: Duration.zero,
         order: 0,
       );
+      const managed = Profile(
+        id: 3,
+        label: 'Managed',
+        autoUpdateDuration: Duration.zero,
+        isManaged: true,
+      );
 
       await database.profilesDao.putAll([
         first.toCompanion(),
         second.toCompanion(),
+        managed.toCompanion(),
       ]);
 
       final profiles = await database.profilesDao.query().get();
-      expect(profiles.map((profile) => profile.id), [2, 1]);
-      expect(profiles.last, first);
+      expect(profiles.map((profile) => profile.id), [2, 1, 3]);
+      expect(profiles[1], first);
+      expect(profiles.last, managed);
       expect(await database.profilesDao.fileNames().get(), [
         '1.yaml',
         '2.yaml',
+        '3.yaml',
       ]);
-      expect(await database.profiles.count.getSingle(), 2);
+      expect(await database.profiles.count.getSingle(), 3);
 
       final replacement = first.copyWith(label: 'Replaced', order: 0);
       await database.profilesDao.setAll([replacement]);
 
-      expect(await database.profilesDao.query().get(), [replacement]);
+      expect(await database.profilesDao.query().get(), [replacement, managed]);
       expect(await database.profiles.remove((table) => table.id.equals(1)), 1);
-      expect(await database.profiles.count.getSingle(), 0);
+      expect(await database.profiles.count.getSingle(), 1);
     },
   );
+
+  test('schema v3 migration adds managed flag with a false default', () async {
+    await database.customSelect('SELECT 1').get();
+    await database.customStatement('DROP TABLE profiles');
+    await database.customStatement(
+      'CREATE TABLE profiles (id INTEGER NOT NULL PRIMARY KEY)',
+    );
+    await database.customStatement('INSERT INTO profiles (id) VALUES (1)');
+
+    await database.migration.onUpgrade(Migrator(database), 2, 3);
+
+    final columns = await database
+        .customSelect('PRAGMA table_info(profiles)')
+        .get();
+    final names = columns
+        .map((row) => row.read<String>('name'))
+        .toList(growable: false);
+    final row = await database
+        .customSelect('SELECT is_managed FROM profiles WHERE id = 1')
+        .getSingle();
+
+    expect(names, contains('is_managed'));
+    expect(row.read<int>('is_managed'), 0);
+  });
 
   test(
     'generated table managers create, filter, order, and update rows',

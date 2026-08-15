@@ -171,7 +171,7 @@ Provider files in `lib/providers/`:
 
 ## Database
 
-The app uses Drift/SQLite in `lib/database/`. Current schema version is 2.
+The app uses Drift/SQLite in `lib/database/`. Current schema version is 3.
 
 Tables:
 

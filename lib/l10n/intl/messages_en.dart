@@ -247,6 +247,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirmOverwriteTip": MessageLookupByLibrary.simpleMessage(
       "Existing data will be overwritten after confirmation",
     ),
+    "connect": MessageLookupByLibrary.simpleMessage("Connect"),
     "connected": MessageLookupByLibrary.simpleMessage("Connected"),
     "connecting": MessageLookupByLibrary.simpleMessage("Connecting..."),
     "connection": MessageLookupByLibrary.simpleMessage("Connection"),
@@ -335,6 +336,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "This software is only used for non-commercial purposes such as learning exchanges and scientific research. It is strictly prohibited to use this software for commercial purposes. Any commercial activity, if any, has nothing to do with this software.",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Disconnected"),
+    "discover": MessageLookupByLibrary.simpleMessage("Discover"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "Discover the new version",
     ),
@@ -346,6 +348,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "doYouWantToPass": MessageLookupByLibrary.simpleMessage(
       "Do you want to pass",
     ),
+    "docs": MessageLookupByLibrary.simpleMessage("Docs"),
     "domain": MessageLookupByLibrary.simpleMessage("Domain"),
     "download": MessageLookupByLibrary.simpleMessage("Download"),
     "edit": MessageLookupByLibrary.simpleMessage("Edit"),
@@ -649,6 +652,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "palette": MessageLookupByLibrary.simpleMessage("Palette"),
     "password": MessageLookupByLibrary.simpleMessage("Password"),
     "paste": MessageLookupByLibrary.simpleMessage("Paste"),
+    "plans": MessageLookupByLibrary.simpleMessage("Plans"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Please bind WebDAV",
     ),
@@ -979,6 +983,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sub rule cannot be empty",
     ),
     "submit": MessageLookupByLibrary.simpleMessage("Submit"),
+    "support": MessageLookupByLibrary.simpleMessage("Support"),
     "suspended": MessageLookupByLibrary.simpleMessage("Suspended..."),
     "sync": MessageLookupByLibrary.simpleMessage("Sync"),
     "system": MessageLookupByLibrary.simpleMessage("System"),
@@ -1045,6 +1050,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("Value"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Vibrant"),
     "view": MessageLookupByLibrary.simpleMessage("View"),
+    "vip": MessageLookupByLibrary.simpleMessage("VIP"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "VPN configuration change detected",
     ),

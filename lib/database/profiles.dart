@@ -32,6 +32,8 @@ class Profiles extends Table {
 
   IntColumn get order => integer().nullable()();
 
+  BoolColumn get isManaged => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -100,7 +102,11 @@ class ProfilesDao extends DatabaseAccessor<Database> with _$ProfilesDaoMixin {
       items.add(profile.toCompanion(index));
     });
 
-    this.profiles.setAll(batch, items, deleteFilter: (t) => t.id.isNotIn(ids));
+    this.profiles.setAll(
+      batch,
+      items,
+      deleteFilter: (t) => t.id.isNotIn(ids) & t.isManaged.equals(false),
+    );
   }
 }
 
@@ -120,6 +126,7 @@ extension RawProfilExt on RawProfile {
       overwriteType: overwriteType,
       scriptId: scriptId,
       order: order,
+      isManaged: isManaged,
     );
   }
 }
@@ -140,6 +147,7 @@ extension ProfilesCompanionExt on Profile {
       overwriteType: overwriteType,
       scriptId: Value(scriptId),
       order: Value(order ?? this.order),
+      isManaged: Value(isManaged),
     );
   }
 }

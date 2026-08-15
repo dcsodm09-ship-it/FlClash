@@ -140,6 +140,21 @@ class $ProfilesTable extends Profiles
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _isManagedMeta = const VerificationMeta(
+    'isManaged',
+  );
+  @override
+  late final GeneratedColumn<bool> isManaged = GeneratedColumn<bool>(
+    'is_managed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_managed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -155,6 +170,7 @@ class $ProfilesTable extends Profiles
     selectedMap,
     unfoldSet,
     order,
+    isManaged,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -236,6 +252,12 @@ class $ProfilesTable extends Profiles
         order.isAcceptableOrUnknown(data['order']!, _orderMeta),
       );
     }
+    if (data.containsKey('is_managed')) {
+      context.handle(
+        _isManagedMeta,
+        isManaged.isAcceptableOrUnknown(data['is_managed']!, _isManagedMeta),
+      );
+    }
     return context;
   }
 
@@ -305,6 +327,10 @@ class $ProfilesTable extends Profiles
         DriftSqlType.int,
         data['${effectivePrefix}order'],
       ),
+      isManaged: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_managed'],
+      )!,
     );
   }
 
@@ -339,6 +365,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final Map<String, String> selectedMap;
   final Set<String> unfoldSet;
   final int? order;
+  final bool isManaged;
   const RawProfile({
     required this.id,
     required this.label,
@@ -353,6 +380,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     required this.selectedMap,
     required this.unfoldSet,
     this.order,
+    required this.isManaged,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -396,6 +424,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     if (!nullToAbsent || order != null) {
       map['order'] = Variable<int>(order);
     }
+    map['is_managed'] = Variable<bool>(isManaged);
     return map;
   }
 
@@ -424,6 +453,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       order: order == null && nullToAbsent
           ? const Value.absent()
           : Value(order),
+      isManaged: Value(isManaged),
     );
   }
 
@@ -454,6 +484,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       ),
       unfoldSet: serializer.fromJson<Set<String>>(json['unfoldSet']),
       order: serializer.fromJson<int?>(json['order']),
+      isManaged: serializer.fromJson<bool>(json['isManaged']),
     );
   }
   @override
@@ -479,6 +510,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'selectedMap': serializer.toJson<Map<String, String>>(selectedMap),
       'unfoldSet': serializer.toJson<Set<String>>(unfoldSet),
       'order': serializer.toJson<int?>(order),
+      'isManaged': serializer.toJson<bool>(isManaged),
     };
   }
 
@@ -496,6 +528,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     Map<String, String>? selectedMap,
     Set<String>? unfoldSet,
     Value<int?> order = const Value.absent(),
+    bool? isManaged,
   }) => RawProfile(
     id: id ?? this.id,
     label: label ?? this.label,
@@ -517,6 +550,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     selectedMap: selectedMap ?? this.selectedMap,
     unfoldSet: unfoldSet ?? this.unfoldSet,
     order: order.present ? order.value : this.order,
+    isManaged: isManaged ?? this.isManaged,
   );
   RawProfile copyWithCompanion(ProfilesCompanion data) {
     return RawProfile(
@@ -547,6 +581,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           : this.selectedMap,
       unfoldSet: data.unfoldSet.present ? data.unfoldSet.value : this.unfoldSet,
       order: data.order.present ? data.order.value : this.order,
+      isManaged: data.isManaged.present ? data.isManaged.value : this.isManaged,
     );
   }
 
@@ -565,7 +600,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('autoUpdate: $autoUpdate, ')
           ..write('selectedMap: $selectedMap, ')
           ..write('unfoldSet: $unfoldSet, ')
-          ..write('order: $order')
+          ..write('order: $order, ')
+          ..write('isManaged: $isManaged')
           ..write(')'))
         .toString();
   }
@@ -585,6 +621,7 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     selectedMap,
     unfoldSet,
     order,
+    isManaged,
   );
   @override
   bool operator ==(Object other) =>
@@ -602,7 +639,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.autoUpdate == this.autoUpdate &&
           other.selectedMap == this.selectedMap &&
           other.unfoldSet == this.unfoldSet &&
-          other.order == this.order);
+          other.order == this.order &&
+          other.isManaged == this.isManaged);
 }
 
 class ProfilesCompanion extends UpdateCompanion<RawProfile> {
@@ -619,6 +657,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<Map<String, String>> selectedMap;
   final Value<Set<String>> unfoldSet;
   final Value<int?> order;
+  final Value<bool> isManaged;
   const ProfilesCompanion({
     this.id = const Value.absent(),
     this.label = const Value.absent(),
@@ -633,6 +672,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.selectedMap = const Value.absent(),
     this.unfoldSet = const Value.absent(),
     this.order = const Value.absent(),
+    this.isManaged = const Value.absent(),
   });
   ProfilesCompanion.insert({
     this.id = const Value.absent(),
@@ -648,6 +688,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     required Map<String, String> selectedMap,
     required Set<String> unfoldSet,
     this.order = const Value.absent(),
+    this.isManaged = const Value.absent(),
   }) : label = Value(label),
        url = Value(url),
        overwriteType = Value(overwriteType),
@@ -669,6 +710,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<String>? selectedMap,
     Expression<String>? unfoldSet,
     Expression<int>? order,
+    Expression<bool>? isManaged,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -685,6 +727,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (selectedMap != null) 'selected_map': selectedMap,
       if (unfoldSet != null) 'unfold_set': unfoldSet,
       if (order != null) 'order': order,
+      if (isManaged != null) 'is_managed': isManaged,
     });
   }
 
@@ -702,6 +745,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<Map<String, String>>? selectedMap,
     Value<Set<String>>? unfoldSet,
     Value<int?>? order,
+    Value<bool>? isManaged,
   }) {
     return ProfilesCompanion(
       id: id ?? this.id,
@@ -718,6 +762,7 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       selectedMap: selectedMap ?? this.selectedMap,
       unfoldSet: unfoldSet ?? this.unfoldSet,
       order: order ?? this.order,
+      isManaged: isManaged ?? this.isManaged,
     );
   }
 
@@ -773,6 +818,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     if (order.present) {
       map['order'] = Variable<int>(order.value);
     }
+    if (isManaged.present) {
+      map['is_managed'] = Variable<bool>(isManaged.value);
+    }
     return map;
   }
 
@@ -791,7 +839,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('autoUpdate: $autoUpdate, ')
           ..write('selectedMap: $selectedMap, ')
           ..write('unfoldSet: $unfoldSet, ')
-          ..write('order: $order')
+          ..write('order: $order, ')
+          ..write('isManaged: $isManaged')
           ..write(')'))
         .toString();
   }
@@ -3480,6 +3529,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required Map<String, String> selectedMap,
       required Set<String> unfoldSet,
       Value<int?> order,
+      Value<bool> isManaged,
     });
 typedef $$ProfilesTableUpdateCompanionBuilder =
     ProfilesCompanion Function({
@@ -3496,6 +3546,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<Map<String, String>> selectedMap,
       Value<Set<String>> unfoldSet,
       Value<int?> order,
+      Value<bool> isManaged,
     });
 
 final class $$ProfilesTableReferences
@@ -3623,6 +3674,11 @@ class $$ProfilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isManaged => $composableBuilder(
+    column: $table.isManaged,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> profileRuleLinksRefs(
     Expression<bool> Function($$ProfileRuleLinksTableFilterComposer f) f,
   ) {
@@ -3747,6 +3803,11 @@ class $$ProfilesTableOrderingComposer
     column: $table.order,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isManaged => $composableBuilder(
+    column: $table.isManaged,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProfilesTableAnnotationComposer
@@ -3813,6 +3874,9 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<int> get order =>
       $composableBuilder(column: $table.order, builder: (column) => column);
+
+  GeneratedColumn<bool> get isManaged =>
+      $composableBuilder(column: $table.isManaged, builder: (column) => column);
 
   Expression<T> profileRuleLinksRefs<T extends Object>(
     Expression<T> Function($$ProfileRuleLinksTableAnnotationComposer a) f,
@@ -3910,6 +3974,7 @@ class $$ProfilesTableTableManager
                 Value<Map<String, String>> selectedMap = const Value.absent(),
                 Value<Set<String>> unfoldSet = const Value.absent(),
                 Value<int?> order = const Value.absent(),
+                Value<bool> isManaged = const Value.absent(),
               }) => ProfilesCompanion(
                 id: id,
                 label: label,
@@ -3924,6 +3989,7 @@ class $$ProfilesTableTableManager
                 selectedMap: selectedMap,
                 unfoldSet: unfoldSet,
                 order: order,
+                isManaged: isManaged,
               ),
           createCompanionCallback:
               ({
@@ -3941,6 +4007,7 @@ class $$ProfilesTableTableManager
                 required Map<String, String> selectedMap,
                 required Set<String> unfoldSet,
                 Value<int?> order = const Value.absent(),
+                Value<bool> isManaged = const Value.absent(),
               }) => ProfilesCompanion.insert(
                 id: id,
                 label: label,
@@ -3955,6 +4022,7 @@ class $$ProfilesTableTableManager
                 selectedMap: selectedMap,
                 unfoldSet: unfoldSet,
                 order: order,
+                isManaged: isManaged,
               ),
           withReferenceMapper: (p0) => p0
               .map(

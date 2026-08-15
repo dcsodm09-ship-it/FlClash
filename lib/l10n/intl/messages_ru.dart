@@ -254,6 +254,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirmOverwriteTip": MessageLookupByLibrary.simpleMessage(
       "Существующие данные будут перезаписаны после подтверждения",
     ),
+    "connect": MessageLookupByLibrary.simpleMessage("Подключение"),
     "connected": MessageLookupByLibrary.simpleMessage("Подключено"),
     "connecting": MessageLookupByLibrary.simpleMessage("Подключение..."),
     "connection": MessageLookupByLibrary.simpleMessage("Соединение"),
@@ -342,6 +343,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Это программное обеспечение используется только в некоммерческих целях, таких как учебные обмены и научные исследования. Запрещено использовать это программное обеспечение в коммерческих целях. Любая коммерческая деятельность, если таковая имеется, не имеет отношения к этому программному обеспечению.",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Отключено"),
+    "discover": MessageLookupByLibrary.simpleMessage("Обзор"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
       "Обнаружена новая версия",
     ),
@@ -353,6 +355,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "doYouWantToPass": MessageLookupByLibrary.simpleMessage(
       "Вы хотите пропустить",
     ),
+    "docs": MessageLookupByLibrary.simpleMessage("Документы"),
     "domain": MessageLookupByLibrary.simpleMessage("Домен"),
     "download": MessageLookupByLibrary.simpleMessage("Скачивание"),
     "edit": MessageLookupByLibrary.simpleMessage("Редактировать"),
@@ -684,6 +687,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "palette": MessageLookupByLibrary.simpleMessage("Палитра"),
     "password": MessageLookupByLibrary.simpleMessage("Пароль"),
     "paste": MessageLookupByLibrary.simpleMessage("Вставить"),
+    "plans": MessageLookupByLibrary.simpleMessage("Тарифы"),
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, привяжите WebDAV",
     ),
@@ -1030,6 +1034,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Подправило не может быть пустым",
     ),
     "submit": MessageLookupByLibrary.simpleMessage("Отправить"),
+    "support": MessageLookupByLibrary.simpleMessage("Поддержка"),
     "suspended": MessageLookupByLibrary.simpleMessage("Приостановлено..."),
     "sync": MessageLookupByLibrary.simpleMessage("Синхронизация"),
     "system": MessageLookupByLibrary.simpleMessage("Система"),
@@ -1108,6 +1113,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("Значение"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Яркие"),
     "view": MessageLookupByLibrary.simpleMessage("Просмотр"),
+    "vip": MessageLookupByLibrary.simpleMessage("VIP"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "Обнаружено изменение конфигурации VPN",
     ),

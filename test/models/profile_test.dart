@@ -53,6 +53,10 @@ void main() {
       expect(urlProfile.type, ProfileType.url);
       expect(urlProfile.realAutoUpdate, true);
       expect(urlProfile.realLabel, 'Remote');
+
+      final managedProfile = Profile.normal(label: 'HGFAST', isManaged: true);
+      expect(managedProfile.url, isEmpty);
+      expect(managedProfile.isManaged, isTrue);
     });
   });
 

@@ -329,6 +329,13 @@ enum PageLabel {
   requests,
   resources,
   connections,
+  connect,
+  discover,
+  support,
+  account,
+  vip,
+  plans,
+  docs,
 }
 
 enum RuleAction {

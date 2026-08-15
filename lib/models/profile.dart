@@ -56,18 +56,24 @@ abstract class Profile with _$Profile {
     @Default(OverwriteType.standard) OverwriteType overwriteType,
     int? scriptId,
     int? order,
+    @Default(false) bool isManaged,
   }) = _Profile;
 
   factory Profile.fromJson(Map<String, Object?> json) =>
       _$ProfileFromJson(json);
 
-  factory Profile.normal({String? label, String url = ''}) {
+  factory Profile.normal({
+    String? label,
+    String url = '',
+    bool isManaged = false,
+  }) {
     final id = snowflake.id;
     return Profile(
       label: label ?? '',
       url: url,
       id: id,
       autoUpdateDuration: defaultUpdateDuration,
+      isManaged: isManaged,
     );
   }
 }

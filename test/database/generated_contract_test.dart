@@ -26,10 +26,11 @@ void main() {
       selectedMap: const {'Select': 'DIRECT'},
       unfoldSet: const {'Select'},
       order: 3,
+      isManaged: true,
     );
 
-    expect(profile.toColumns(true), hasLength(13));
-    expect(profile.toCompanion(true).toColumns(true), hasLength(13));
+    expect(profile.toColumns(true), hasLength(14));
+    expect(profile.toCompanion(true).toColumns(true), hasLength(14));
     expect(RawProfile.fromJson(profile.toJson()).toJson(), profile.toJson());
     expect(profile.copyWith(label: 'Next').label, 'Next');
     expect(
@@ -57,10 +58,11 @@ void main() {
       autoUpdate: false,
       selectedMap: {},
       unfoldSet: {},
+      isManaged: false,
     );
-    expect(emptyProfile.toColumns(true), hasLength(8));
-    expect(emptyProfile.toColumns(false), hasLength(13));
-    expect(emptyProfile.toCompanion(true).toColumns(true), hasLength(8));
+    expect(emptyProfile.toColumns(true), hasLength(9));
+    expect(emptyProfile.toColumns(false), hasLength(14));
+    expect(emptyProfile.toCompanion(true).toColumns(true), hasLength(9));
 
     final insertedProfile = ProfilesCompanion.insert(
       label: 'Inserted',
@@ -88,8 +90,9 @@ void main() {
         selectedMap: const Variable('{}'),
         unfoldSet: const Variable('[]'),
         order: const Variable(1),
+        isManaged: const Variable(true),
       ).toColumns(false),
-      hasLength(13),
+      hasLength(14),
     );
 
     final script = RawScript(id: 2, label: 'Script', lastUpdateTime: date);

@@ -9,6 +9,7 @@ class Navigation {
   List<NavigationItem> getItems({
     bool openLogs = false,
     bool hasProxies = false,
+    bool enableHgfast = false,
   }) {
     return [
       NavigationItem(
@@ -71,6 +72,77 @@ class Navigation {
         label: PageLabel.tools,
         builder: (_) => const ToolsView(key: GlobalObjectKey(PageLabel.tools)),
         modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.power_settings_new),
+        label: PageLabel.connect,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.connect)),
+        path: '/connect',
+        modes: enableHgfast
+            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
+            : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.explore),
+        label: PageLabel.discover,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.discover)),
+        path: '/discover',
+        modes: enableHgfast
+            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
+            : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.support_agent),
+        label: PageLabel.support,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.support)),
+        path: '/support',
+        modes: enableHgfast
+            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
+            : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.person),
+        label: PageLabel.account,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.account)),
+        path: '/account',
+        modes: enableHgfast
+            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
+            : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.workspace_premium),
+        label: PageLabel.vip,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.vip)),
+        path: '/vip',
+        modes: enableHgfast ? [NavigationItemMode.desktop] : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.payments),
+        label: PageLabel.plans,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.plans)),
+        path: '/plans',
+        modes: enableHgfast ? [NavigationItemMode.desktop] : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.menu_book),
+        label: PageLabel.docs,
+        builder: (_) =>
+            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.docs)),
+        path: '/docs',
+        modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
     ];
   }
