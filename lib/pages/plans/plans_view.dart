@@ -92,9 +92,14 @@ class _PlanData {
     final pricesMap = pricesRaw is Map
         ? pricesRaw.map((key, value) => MapEntry('$key', value))
         : const <String, Object?>{};
+    // Matches the live web store's own availability rule (v2_plan rows use
+    // 0, not just null/absent, to mean "this period isn't offered" —
+    // app/public/views/store/render.js and public_v3_src/views/store.ts
+    // both gate on > 0). A bare `!= null` check would render a real "月付
+    // ¥0.00" buy chip for a period the website itself hides.
     final prices = <_PlanPrice>[
       for (final period in _periodOrder)
-        if (_asNum(pricesMap[period]) != null)
+        if ((_asNum(pricesMap[period]) ?? 0) > 0)
           _PlanPrice(period: period, cents: _asNum(pricesMap[period])!.toInt()),
     ];
     return _PlanData(

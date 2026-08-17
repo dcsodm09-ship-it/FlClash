@@ -116,6 +116,49 @@ void main() {
       },
     );
 
+    testWidgets(
+      'a period priced at 0 (v2_plan\'s own "not offered" convention) is '
+      'never rendered as a real ¥0.00 buy option',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            hgfastRepositoryProvider.overrideWithValue(
+              _FakeRepository(
+                plansValues: const {
+                  'plans': [
+                    {
+                      'id': 'plan:3',
+                      'name': '基础套餐',
+                      'transfer_gb': 200,
+                      'device_limit': 3,
+                      'prices_cents': {
+                        'month': 990,
+                        // 0, not null — matches how the live v2_plan table
+                        // (and the web store's own render.js/store.ts,
+                        // which both gate on `> 0`) represent "this period
+                        // isn't offered". A negative value must be treated
+                        // the same way.
+                        'quarter': 0,
+                        'half_year': -1,
+                        'year': null,
+                        'onetime': null,
+                      },
+                    },
+                  ],
+                },
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        await pump(tester, container);
+
+        expect(find.text('月付 ¥9.90'), findsOneWidget);
+        expect(find.textContaining('季付'), findsNothing);
+        expect(find.textContaining('半年付'), findsNothing);
+      },
+    );
+
     testWidgets('an empty plans response shows the real empty state, not '
         'fabricated data', (tester) async {
       final container = ProviderContainer(

@@ -1298,11 +1298,20 @@ final class HgfastRepositoryImpl implements HgfastRepository {
 
   // Real write path: POST /order — see repository.dart's doc comment on
   // this method for why this is expected to fail (403/501) against the
-  // live backend today. Field names (`plan_id`, `period`, `action`,
-  // `coupon_code`) match v2board-adapter.js's `orderCreateSpec()` exactly;
-  // `period` is the client-facing key (`month`/`quarter`/`half_year`/
-  // `year`/`onetime`, same keys as `/plans`' `prices_cents`), not the
-  // internal v2board column name — the server maps that itself.
+  // live backend today. `plan_id`/`period`/`coupon_code` are a proposed,
+  // NOT backend-confirmed wire format loosely informed by
+  // v2board-adapter.js's `orderCreateSpec()` — that function's actual
+  // input shape is camelCase (`planId`) and its actual output shape (the
+  // upstream v2board body it documents building) wants a bare numeric
+  // `plan_id` and a v2board column name like `month_price` for `period`,
+  // neither of which this client sends. `plan_id` here is sent as-is with
+  // the `plan:` prefix `/plans` returns, and `period` as the client-facing
+  // key (`month`/`quarter`/`half_year`/`year`/`onetime`, same keys as
+  // `/plans`' `prices_cents`) — whatever server-side proxy eventually
+  // fronts the real order/save call is what owns translating both, along
+  // with setting `action` itself (deliberately NOT sent by the client: once
+  // this becomes a pass-through proxy, a client-controlled `action` could
+  // select purchase vs. renewal vs. reset on the real endpoint).
   @override
   Future<HgfastResult<HgfastOrderStatus, HgfastError>> createOrder({
     required String planId,
@@ -1318,7 +1327,6 @@ final class HgfastRepositoryImpl implements HgfastRepository {
       jsonBody: <String, Object?>{
         'plan_id': planId,
         'period': period,
-        'action': 'purchase',
         'coupon_code': ?couponCode,
       },
       parse: (body) => HgfastOrderStatus(body),
