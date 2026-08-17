@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/hgfast/config_gen/config_gen.dart';
+import 'package:fl_clash/hgfast/models/error.dart';
+import 'package:fl_clash/hgfast/models/node.dart';
+import 'package:fl_clash/hgfast/repository/hgfast_result_x.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/plugins/service.dart';
@@ -15,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' show basename;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'actions/common.dart';
@@ -27,4 +34,6 @@ part 'actions/theme.dart';
 part 'actions/proxies.dart';
 part 'actions/profiles.dart';
 part 'actions/geo_resource.dart';
+part 'actions/hgfast_auth.dart';
+part 'actions/hgfast_sync.dart';
 part 'generated/action.g.dart';

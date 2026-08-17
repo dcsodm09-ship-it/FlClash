@@ -521,3 +521,107 @@ abstract class _$GeoResourceAction extends $Notifier<void> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(HgfastAuthAction)
+final hgfastAuthActionProvider = HgfastAuthActionProvider._();
+
+final class HgfastAuthActionProvider
+    extends $NotifierProvider<HgfastAuthAction, void> {
+  HgfastAuthActionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'hgfastAuthActionProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$hgfastAuthActionHash();
+
+  @$internal
+  @override
+  HgfastAuthAction create() => HgfastAuthAction();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$hgfastAuthActionHash() => r'c5a97e044e90c6bf92830800e0dc7a34253e89dd';
+
+abstract class _$HgfastAuthAction extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(HgfastSyncAction)
+final hgfastSyncActionProvider = HgfastSyncActionProvider._();
+
+final class HgfastSyncActionProvider
+    extends $NotifierProvider<HgfastSyncAction, void> {
+  HgfastSyncActionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'hgfastSyncActionProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$hgfastSyncActionHash();
+
+  @$internal
+  @override
+  HgfastSyncAction create() => HgfastSyncAction();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$hgfastSyncActionHash() => r'bbefdc4303d4bf5b5d71c5e78d34050c7ccf34cf';
+
+abstract class _$HgfastSyncAction extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
