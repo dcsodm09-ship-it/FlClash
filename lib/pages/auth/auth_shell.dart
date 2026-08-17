@@ -1,7 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
-import 'package:fl_clash/state.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,7 +29,7 @@ List<Map<String, Object?>> extractFallbackContacts(HgfastBootstrap bootstrap) {
 }
 
 Future<List<Map<String, Object?>>> fetchFallbackContacts(WidgetRef ref) async {
-  final repository = ref.read(authRepositoryProvider);
+  final repository = ref.read(hgfastRepositoryProvider);
   final result = await repository.bootstrap();
   return switch (result) {
     HgfastResultSuccess<HgfastBootstrap, HgfastError>(:final value) =>

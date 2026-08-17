@@ -5,6 +5,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/pages/auth/forgot_password_view.dart';
 import 'package:fl_clash/pages/auth/login_view.dart';
 import 'package:fl_clash/pages/auth/register_view.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -37,9 +38,10 @@ void main() {
   testWidgets('successful login flips isAuthenticatedProvider', (tester) async {
     final container = ProviderContainer(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
+        hgfastRepositoryProvider.overrideWithValue(
           _FakeRepository(succeed: true),
         ),
+        hgfastSyncActionProvider.overrideWith(() => _NoopSyncAction()),
       ],
     );
     addTearDown(container.dispose);
@@ -65,9 +67,10 @@ void main() {
   testWidgets('failed login shows the mapped error message', (tester) async {
     final container = ProviderContainer(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
+        hgfastRepositoryProvider.overrideWithValue(
           _FakeRepository(succeed: false),
         ),
+        hgfastSyncActionProvider.overrideWith(() => _NoopSyncAction()),
       ],
     );
     addTearDown(container.dispose);
@@ -89,7 +92,7 @@ void main() {
 
     expect(find.text('账号或密码错误'), findsOneWidget);
     expect(find.textContaining('10.0.0.5'), findsNothing);
-    expect(container.read(isAuthenticatedProvider), isNull);
+    expect(container.read(isAuthenticatedProvider), isFalse);
   });
 
   testWidgets('register entry pushes RegisterView on the root navigator', (
@@ -118,7 +121,7 @@ void main() {
   ) async {
     final container = ProviderContainer(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
+        hgfastRepositoryProvider.overrideWithValue(
           _FakeRepository(succeed: false),
         ),
       ],
@@ -159,6 +162,17 @@ class _TestApp extends StatelessWidget {
       home: child,
     );
   }
+}
+
+final class _NoopSyncAction extends HgfastSyncAction {
+  @override
+  void build() {}
+
+  @override
+  Future<void> syncAfterLogin() async {}
+
+  @override
+  void stopPolling() {}
 }
 
 final class _FakeRepository implements HgfastRepository {

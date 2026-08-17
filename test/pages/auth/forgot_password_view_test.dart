@@ -3,6 +3,7 @@ import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/pages/auth/forgot_password_view.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -15,7 +16,7 @@ void main() {
   ) async {
     final container = ProviderContainer(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
+        hgfastRepositoryProvider.overrideWithValue(
           _FakeRepository(contacts: const []),
         ),
       ],
@@ -38,7 +39,7 @@ void main() {
   testWidgets('renders fallback_contacts from bootstrap', (tester) async {
     final container = ProviderContainer(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
+        hgfastRepositoryProvider.overrideWithValue(
           _FakeRepository(
             contacts: const [
               {'label': 'Telegram', 'value': '@example'},
@@ -66,7 +67,7 @@ void main() {
   testWidgets('back button pops the route', (tester) async {
     final container = ProviderContainer(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
+        hgfastRepositoryProvider.overrideWithValue(
           _FakeRepository(contacts: const []),
         ),
       ],

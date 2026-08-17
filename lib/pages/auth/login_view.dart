@@ -1,8 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
-import 'package:fl_clash/hgfast/repository/repository.dart';
-import 'package:fl_clash/state.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,30 +54,29 @@ class _LoginViewState extends ConsumerState<LoginView> {
       _isSubmitting = true;
       _errorMessage = null;
     });
-    final repository = ref.read(authRepositoryProvider);
-    final result = await repository.login(
-      credential: credential,
-      password: password,
-    );
+    final loggedIn = await ref
+        .read(hgfastAuthActionProvider.notifier)
+        .login(credential: credential, password: password);
     if (!mounted) {
       return;
     }
-    switch (result) {
-      case HgfastResultSuccess<HgfastSession, HgfastError>():
-        setState(() {
-          _isSubmitting = false;
-        });
-        ref.read(isAuthenticatedProvider.notifier).value = true;
-      case HgfastResultFailure<HgfastSession, HgfastError>(:final error):
-        commonPrint.log(
-          'login failed: ${error.code} ${error.message}',
-          logLevel: LogLevel.warning,
-        );
-        setState(() {
-          _isSubmitting = false;
-          _errorMessage = _describeError(error);
-        });
+    if (loggedIn) {
+      setState(() {
+        _isSubmitting = false;
+      });
+      return;
     }
+    final error = ref.read(hgfastAuthProvider).error;
+    if (error != null) {
+      commonPrint.log(
+        'login failed: ${error.code} ${error.message}',
+        logLevel: LogLevel.warning,
+      );
+    }
+    setState(() {
+      _isSubmitting = false;
+      _errorMessage = error != null ? _describeError(error) : '登录失败，请稍后再试';
+    });
   }
 
   void _handleRegister() {

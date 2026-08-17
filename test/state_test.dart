@@ -2,6 +2,7 @@ import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,22 @@ void main() {
     expect(container.read(isAuthenticatedProvider), isNull);
   });
 
+  test('isAuthenticatedProvider follows hgfastAuthProvider phase', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    container.read(hgfastAuthProvider.notifier).markAuthenticating();
+    expect(container.read(isAuthenticatedProvider), isFalse);
+
+    container
+        .read(hgfastAuthProvider.notifier)
+        .markAuthenticated(HgfastSession({}));
+    expect(container.read(isAuthenticatedProvider), isTrue);
+
+    container.read(hgfastAuthProvider.notifier).markUnauthenticated();
+    expect(container.read(isAuthenticatedProvider), isFalse);
+  });
+
   test('launchUrlGuardProvider defaults to allowing every url', () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -28,43 +45,18 @@ void main() {
     expect(await guard('https://hgfastapp.com'), isTrue);
   });
 
-  test(
-    'the default authRepositoryProvider stub never grants a session',
-    () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final repository = container.read(authRepositoryProvider);
-
-      final loginResult = await repository.login(
-        credential: 'user',
-        password: 'password',
-      );
-      final restoreResult = await repository.restoreSession();
-
-      expect(loginResult.isFailure, isTrue);
-      expect(
-        (loginResult as HgfastResultFailure<HgfastSession, HgfastError>).error,
-        isA<HgfastClientApiStateUnavailable>(),
-      );
-      expect(restoreResult.isSuccess, isTrue);
-      expect(
-        (restoreResult as HgfastResultSuccess<HgfastSession?, HgfastError>)
-            .value,
-        isNull,
-      );
-    },
-  );
-
   testWidgets(
     'handleSessionExpired pops to the first route, drops the session and clears auth state',
     (tester) async {
       final repository = _TrackingRepository();
       final container = ProviderContainer(
-        overrides: [authRepositoryProvider.overrideWithValue(repository)],
+        overrides: [hgfastRepositoryProvider.overrideWithValue(repository)],
       );
       addTearDown(container.dispose);
       globalState.container = container;
-      container.read(isAuthenticatedProvider.notifier).value = true;
+      container
+          .read(hgfastAuthProvider.notifier)
+          .markAuthenticated(HgfastSession({}));
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
