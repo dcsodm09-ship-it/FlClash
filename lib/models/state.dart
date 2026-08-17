@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -200,9 +201,11 @@ abstract class ProxyGroupSelectorState with _$ProxyGroupSelectorState {
 @freezed
 abstract class ConnectNodesState with _$ConnectNodesState {
   const factory ConnectNodesState({
+    required ConnectLoadPhase phase,
     required List<NodeSpec> nodes,
     required List<NodeTypeFilter> availableFilters,
     required NodeTypeFilter selectedFilter,
+    HgfastError? error,
   }) = _ConnectNodesState;
 }
 

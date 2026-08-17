@@ -29,6 +29,14 @@ class HgfastSyncAction extends _$HgfastSyncAction {
     await _syncOnce();
   }
 
+  Future<void> retryNow() async {
+    if (!ref.read(hgfastAuthProvider).isAuthenticated) {
+      return;
+    }
+    await _ensureCoreInitialized();
+    await _syncOnce();
+  }
+
   void stopPolling() {
     _pollTimer?.cancel();
     _pollTimer = null;

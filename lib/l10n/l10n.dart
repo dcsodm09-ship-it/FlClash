@@ -159,6 +159,86 @@ class AppLocalizations {
     );
   }
 
+  /// `Retry`
+  String get retry {
+    return Intl.message('Retry', name: 'retry', desc: '', args: []);
+  }
+
+  /// `Contact support`
+  String get contactSupport {
+    return Intl.message(
+      'Contact support',
+      name: 'contactSupport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View plans`
+  String get viewPlans {
+    return Intl.message('View plans', name: 'viewPlans', desc: '', args: []);
+  }
+
+  /// `Couldn't load nodes`
+  String get connectLoadFailed {
+    return Intl.message(
+      'Couldn\'t load nodes',
+      name: 'connectLoadFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This feature isn't open to your account yet`
+  String get connectNotInCanary {
+    return Intl.message(
+      'This feature isn\'t open to your account yet',
+      name: 'connectNotInCanary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your account has been suspended`
+  String get accessGateBanned {
+    return Intl.message(
+      'Your account has been suspended',
+      name: 'accessGateBanned',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your plan has expired`
+  String get accessGateExpired {
+    return Intl.message(
+      'Your plan has expired',
+      name: 'accessGateExpired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You've used up your traffic quota`
+  String get accessGateQuotaExhausted {
+    return Intl.message(
+      'You\'ve used up your traffic quota',
+      name: 'accessGateQuotaExhausted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your account hasn't been assigned a plan yet`
+  String get accessGateNoGroup {
+    return Intl.message(
+      'Your account hasn\'t been assigned a plan yet',
+      name: 'accessGateNoGroup',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Proxies`
   String get proxies {
     return Intl.message('Proxies', name: 'proxies', desc: '', args: []);

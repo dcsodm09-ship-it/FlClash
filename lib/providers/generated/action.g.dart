@@ -606,7 +606,7 @@ final class HgfastSyncActionProvider
   }
 }
 
-String _$hgfastSyncActionHash() => r'bbefdc4303d4bf5b5d71c5e78d34050c7ccf34cf';
+String _$hgfastSyncActionHash() => r'3661792dba5952381aecd40be0bac68e9e7fa5ec';
 
 abstract class _$HgfastSyncAction extends $Notifier<void> {
   void build();

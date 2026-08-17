@@ -338,6 +338,8 @@ enum PageLabel {
   docs,
 }
 
+enum ConnectLoadPhase { loading, loaded, accountBlocked, notInCanary, error }
+
 enum NodeTypeFilter {
   all,
   recommended,

@@ -6270,7 +6270,7 @@ as List<Proxy>,
 /// @nodoc
 mixin _$ConnectNodesState {
 
- List<NodeSpec> get nodes; List<NodeTypeFilter> get availableFilters; NodeTypeFilter get selectedFilter;
+ ConnectLoadPhase get phase; List<NodeSpec> get nodes; List<NodeTypeFilter> get availableFilters; NodeTypeFilter get selectedFilter; HgfastError? get error;
 /// Create a copy of ConnectNodesState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6281,16 +6281,16 @@ $ConnectNodesStateCopyWith<ConnectNodesState> get copyWith => _$ConnectNodesStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConnectNodesState&&const DeepCollectionEquality().equals(other.nodes, nodes)&&const DeepCollectionEquality().equals(other.availableFilters, availableFilters)&&(identical(other.selectedFilter, selectedFilter) || other.selectedFilter == selectedFilter));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConnectNodesState&&(identical(other.phase, phase) || other.phase == phase)&&const DeepCollectionEquality().equals(other.nodes, nodes)&&const DeepCollectionEquality().equals(other.availableFilters, availableFilters)&&(identical(other.selectedFilter, selectedFilter) || other.selectedFilter == selectedFilter)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(nodes),const DeepCollectionEquality().hash(availableFilters),selectedFilter);
+int get hashCode => Object.hash(runtimeType,phase,const DeepCollectionEquality().hash(nodes),const DeepCollectionEquality().hash(availableFilters),selectedFilter,error);
 
 @override
 String toString() {
-  return 'ConnectNodesState(nodes: $nodes, availableFilters: $availableFilters, selectedFilter: $selectedFilter)';
+  return 'ConnectNodesState(phase: $phase, nodes: $nodes, availableFilters: $availableFilters, selectedFilter: $selectedFilter, error: $error)';
 }
 
 
@@ -6301,7 +6301,7 @@ abstract mixin class $ConnectNodesStateCopyWith<$Res>  {
   factory $ConnectNodesStateCopyWith(ConnectNodesState value, $Res Function(ConnectNodesState) _then) = _$ConnectNodesStateCopyWithImpl;
 @useResult
 $Res call({
- List<NodeSpec> nodes, List<NodeTypeFilter> availableFilters, NodeTypeFilter selectedFilter
+ ConnectLoadPhase phase, List<NodeSpec> nodes, List<NodeTypeFilter> availableFilters, NodeTypeFilter selectedFilter, HgfastError? error
 });
 
 
@@ -6318,12 +6318,14 @@ class _$ConnectNodesStateCopyWithImpl<$Res>
 
 /// Create a copy of ConnectNodesState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? nodes = null,Object? availableFilters = null,Object? selectedFilter = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? phase = null,Object? nodes = null,Object? availableFilters = null,Object? selectedFilter = null,Object? error = freezed,}) {
   return _then(_self.copyWith(
-nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
+phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
+as ConnectLoadPhase,nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
 as List<NodeSpec>,availableFilters: null == availableFilters ? _self.availableFilters : availableFilters // ignore: cast_nullable_to_non_nullable
 as List<NodeTypeFilter>,selectedFilter: null == selectedFilter ? _self.selectedFilter : selectedFilter // ignore: cast_nullable_to_non_nullable
-as NodeTypeFilter,
+as NodeTypeFilter,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as HgfastError?,
   ));
 }
 
@@ -6408,10 +6410,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ConnectLoadPhase phase,  List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter,  HgfastError? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ConnectNodesState() when $default != null:
-return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
+return $default(_that.phase,_that.nodes,_that.availableFilters,_that.selectedFilter,_that.error);case _:
   return orElse();
 
 }
@@ -6429,10 +6431,10 @@ return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ConnectLoadPhase phase,  List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter,  HgfastError? error)  $default,) {final _that = this;
 switch (_that) {
 case _ConnectNodesState():
-return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
+return $default(_that.phase,_that.nodes,_that.availableFilters,_that.selectedFilter,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -6449,10 +6451,10 @@ return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ConnectLoadPhase phase,  List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter,  HgfastError? error)?  $default,) {final _that = this;
 switch (_that) {
 case _ConnectNodesState() when $default != null:
-return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
+return $default(_that.phase,_that.nodes,_that.availableFilters,_that.selectedFilter,_that.error);case _:
   return null;
 
 }
@@ -6464,9 +6466,10 @@ return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
 
 
 class _ConnectNodesState implements ConnectNodesState {
-  const _ConnectNodesState({required final  List<NodeSpec> nodes, required final  List<NodeTypeFilter> availableFilters, required this.selectedFilter}): _nodes = nodes,_availableFilters = availableFilters;
+  const _ConnectNodesState({required this.phase, required final  List<NodeSpec> nodes, required final  List<NodeTypeFilter> availableFilters, required this.selectedFilter, this.error}): _nodes = nodes,_availableFilters = availableFilters;
   
 
+@override final  ConnectLoadPhase phase;
  final  List<NodeSpec> _nodes;
 @override List<NodeSpec> get nodes {
   if (_nodes is EqualUnmodifiableListView) return _nodes;
@@ -6482,6 +6485,7 @@ class _ConnectNodesState implements ConnectNodesState {
 }
 
 @override final  NodeTypeFilter selectedFilter;
+@override final  HgfastError? error;
 
 /// Create a copy of ConnectNodesState
 /// with the given fields replaced by the non-null parameter values.
@@ -6493,16 +6497,16 @@ _$ConnectNodesStateCopyWith<_ConnectNodesState> get copyWith => __$ConnectNodesS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConnectNodesState&&const DeepCollectionEquality().equals(other._nodes, _nodes)&&const DeepCollectionEquality().equals(other._availableFilters, _availableFilters)&&(identical(other.selectedFilter, selectedFilter) || other.selectedFilter == selectedFilter));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConnectNodesState&&(identical(other.phase, phase) || other.phase == phase)&&const DeepCollectionEquality().equals(other._nodes, _nodes)&&const DeepCollectionEquality().equals(other._availableFilters, _availableFilters)&&(identical(other.selectedFilter, selectedFilter) || other.selectedFilter == selectedFilter)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_nodes),const DeepCollectionEquality().hash(_availableFilters),selectedFilter);
+int get hashCode => Object.hash(runtimeType,phase,const DeepCollectionEquality().hash(_nodes),const DeepCollectionEquality().hash(_availableFilters),selectedFilter,error);
 
 @override
 String toString() {
-  return 'ConnectNodesState(nodes: $nodes, availableFilters: $availableFilters, selectedFilter: $selectedFilter)';
+  return 'ConnectNodesState(phase: $phase, nodes: $nodes, availableFilters: $availableFilters, selectedFilter: $selectedFilter, error: $error)';
 }
 
 
@@ -6513,7 +6517,7 @@ abstract mixin class _$ConnectNodesStateCopyWith<$Res> implements $ConnectNodesS
   factory _$ConnectNodesStateCopyWith(_ConnectNodesState value, $Res Function(_ConnectNodesState) _then) = __$ConnectNodesStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<NodeSpec> nodes, List<NodeTypeFilter> availableFilters, NodeTypeFilter selectedFilter
+ ConnectLoadPhase phase, List<NodeSpec> nodes, List<NodeTypeFilter> availableFilters, NodeTypeFilter selectedFilter, HgfastError? error
 });
 
 
@@ -6530,12 +6534,14 @@ class __$ConnectNodesStateCopyWithImpl<$Res>
 
 /// Create a copy of ConnectNodesState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? nodes = null,Object? availableFilters = null,Object? selectedFilter = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? phase = null,Object? nodes = null,Object? availableFilters = null,Object? selectedFilter = null,Object? error = freezed,}) {
   return _then(_ConnectNodesState(
-nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
+phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
+as ConnectLoadPhase,nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
 as List<NodeSpec>,availableFilters: null == availableFilters ? _self._availableFilters : availableFilters // ignore: cast_nullable_to_non_nullable
 as List<NodeTypeFilter>,selectedFilter: null == selectedFilter ? _self.selectedFilter : selectedFilter // ignore: cast_nullable_to_non_nullable
-as NodeTypeFilter,
+as NodeTypeFilter,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as HgfastError?,
   ));
 }
 

@@ -97,6 +97,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlSettings": MessageLookupByLibrary.simpleMessage(
       "Access Control Settings",
     ),
+    "accessGateBanned": MessageLookupByLibrary.simpleMessage(
+      "Your account has been suspended",
+    ),
+    "accessGateExpired": MessageLookupByLibrary.simpleMessage(
+      "Your plan has expired",
+    ),
+    "accessGateNoGroup": MessageLookupByLibrary.simpleMessage(
+      "Your account hasn\'t been assigned a plan yet",
+    ),
+    "accessGateQuotaExhausted": MessageLookupByLibrary.simpleMessage(
+      "You\'ve used up your traffic quota",
+    ),
     "account": MessageLookupByLibrary.simpleMessage("Account"),
     "action": MessageLookupByLibrary.simpleMessage("Action"),
     "action_mode": MessageLookupByLibrary.simpleMessage("Switch mode"),
@@ -249,6 +261,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Existing data will be overwritten after confirmation",
     ),
     "connect": MessageLookupByLibrary.simpleMessage("Connect"),
+    "connectLoadFailed": MessageLookupByLibrary.simpleMessage(
+      "Couldn\'t load nodes",
+    ),
+    "connectNotInCanary": MessageLookupByLibrary.simpleMessage(
+      "This feature isn\'t open to your account yet",
+    ),
     "connected": MessageLookupByLibrary.simpleMessage("Connected"),
     "connecting": MessageLookupByLibrary.simpleMessage("Connecting..."),
     "connection": MessageLookupByLibrary.simpleMessage("Connection"),
@@ -257,6 +275,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "View current connections data",
     ),
     "connectivity": MessageLookupByLibrary.simpleMessage("Connectivity："),
+    "contactSupport": MessageLookupByLibrary.simpleMessage("Contact support"),
     "content": MessageLookupByLibrary.simpleMessage("Content"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Content cannot be empty",
@@ -815,6 +834,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Override",
     ),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("Restore success"),
+    "retry": MessageLookupByLibrary.simpleMessage("Retry"),
     "routeAddress": MessageLookupByLibrary.simpleMessage("Route address"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage(
       "Config listen route address",
@@ -1062,6 +1082,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("Value"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Vibrant"),
     "view": MessageLookupByLibrary.simpleMessage("View"),
+    "viewPlans": MessageLookupByLibrary.simpleMessage("View plans"),
     "vip": MessageLookupByLibrary.simpleMessage("VIP"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "VPN configuration change detected",

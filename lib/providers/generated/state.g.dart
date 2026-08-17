@@ -606,8 +606,8 @@ final class FilterGroupsStateFamily extends $Family
 final connectNodeCatalogProvider = ConnectNodeCatalogProvider._();
 
 final class ConnectNodeCatalogProvider
-    extends $FunctionalProvider<NodeCatalog, NodeCatalog, NodeCatalog>
-    with $Provider<NodeCatalog> {
+    extends $FunctionalProvider<NodeCatalog?, NodeCatalog?, NodeCatalog?>
+    with $Provider<NodeCatalog?> {
   ConnectNodeCatalogProvider._()
     : super(
         from: null,
@@ -624,25 +624,25 @@ final class ConnectNodeCatalogProvider
 
   @$internal
   @override
-  $ProviderElement<NodeCatalog> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<NodeCatalog?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  NodeCatalog create(Ref ref) {
+  NodeCatalog? create(Ref ref) {
     return connectNodeCatalog(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(NodeCatalog value) {
+  Override overrideWithValue(NodeCatalog? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<NodeCatalog>(value),
+      providerOverride: $SyncValueProvider<NodeCatalog?>(value),
     );
   }
 }
 
 String _$connectNodeCatalogHash() =>
-    r'c835b38a7649b316bdb66ffae271823bb2bacd92';
+    r'5d2a0fd3350442aa34e8f075782b50b07771a46f';
 
 @ProviderFor(connectAvailableFilters)
 final connectAvailableFiltersProvider = ConnectAvailableFiltersProvider._();
@@ -690,7 +690,7 @@ final class ConnectAvailableFiltersProvider
 }
 
 String _$connectAvailableFiltersHash() =>
-    r'f7e495454aa3cef4b7372830c0131f262c3efaaf';
+    r'd650439162cea1def501afda11471a14790f0bd8';
 
 @ProviderFor(filterConnectNodesState)
 final filterConnectNodesStateProvider = FilterConnectNodesStateFamily._();
@@ -757,7 +757,7 @@ final class FilterConnectNodesStateProvider
 }
 
 String _$filterConnectNodesStateHash() =>
-    r'2716847b982fa07bbb337ba6fafcd7628a9cf2a7';
+    r'8fa1ca29985506052b59f3982c37ef2dd1d5a600';
 
 final class FilterConnectNodesStateFamily extends $Family
     with $FunctionalFamilyOverride<ConnectNodesState, NodeTypeFilter> {

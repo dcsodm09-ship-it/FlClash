@@ -5,6 +5,7 @@ import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/hgfast/nodes.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'app.dart';
 import 'config.dart';
-import 'connect_fixture.dart';
 import 'database.dart';
 
 part 'generated/state.g.dart';
@@ -250,14 +250,25 @@ GroupsState filterGroupsState(Ref ref, String query) {
 
 int _byNodeSort(NodeSpec a, NodeSpec b) => a.sort.compareTo(b.sort);
 
+ConnectLoadPhase _connectLoadPhase(HgfastNodesPhase phase) {
+  return switch (phase) {
+    HgfastNodesPhase.idle ||
+    HgfastNodesPhase.loading => ConnectLoadPhase.loading,
+    HgfastNodesPhase.loaded => ConnectLoadPhase.loaded,
+    HgfastNodesPhase.accountBlocked => ConnectLoadPhase.accountBlocked,
+    HgfastNodesPhase.notInCanary => ConnectLoadPhase.notInCanary,
+    HgfastNodesPhase.error => ConnectLoadPhase.error,
+  };
+}
+
 @riverpod
-NodeCatalog connectNodeCatalog(Ref ref) {
-  return connectFixtureNodeCatalog();
+NodeCatalog? connectNodeCatalog(Ref ref) {
+  return ref.watch(hgfastNodesProvider.select((state) => state.catalog));
 }
 
 @riverpod
 List<NodeTypeFilter> connectAvailableFilters(Ref ref) {
-  final nodes = ref.watch(connectNodeCatalogProvider).nodes;
+  final nodes = ref.watch(connectNodeCatalogProvider)?.nodes ?? const [];
   return [
     NodeTypeFilter.all,
     NodeTypeFilter.recommended,
@@ -273,12 +284,12 @@ List<NodeTypeFilter> connectAvailableFilters(Ref ref) {
 
 @riverpod
 ConnectNodesState filterConnectNodesState(Ref ref, NodeTypeFilter filter) {
-  final catalog = ref.watch(connectNodeCatalogProvider);
+  final hgfastNodesState = ref.watch(hgfastNodesProvider);
   final availableFilters = ref.watch(connectAvailableFiltersProvider);
   final selectedFilter = availableFilters.contains(filter)
       ? filter
       : NodeTypeFilter.all;
-  final nodes = catalog.nodes;
+  final nodes = hgfastNodesState.catalog?.nodes ?? const <NodeSpec>[];
   final filtered = switch (selectedFilter) {
     NodeTypeFilter.all => nodes.toList(),
     NodeTypeFilter.recommended => nodes.toList()..sort(_byNodeSort),
@@ -298,9 +309,11 @@ ConnectNodesState filterConnectNodesState(Ref ref, NodeTypeFilter filter) {
         ..sort(_byNodeSort),
   };
   return ConnectNodesState(
+    phase: _connectLoadPhase(hgfastNodesState.phase),
     nodes: filtered,
     availableFilters: availableFilters,
     selectedFilter: selectedFilter,
+    error: hgfastNodesState.error,
   );
 }
 

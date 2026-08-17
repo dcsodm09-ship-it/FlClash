@@ -96,6 +96,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlSettings": MessageLookupByLibrary.simpleMessage(
       "Настройки контроля доступа",
     ),
+    "accessGateBanned": MessageLookupByLibrary.simpleMessage(
+      "Ваш аккаунт заблокирован",
+    ),
+    "accessGateExpired": MessageLookupByLibrary.simpleMessage(
+      "Срок действия тарифа истёк",
+    ),
+    "accessGateNoGroup": MessageLookupByLibrary.simpleMessage(
+      "Вашему аккаунту не назначен тариф",
+    ),
+    "accessGateQuotaExhausted": MessageLookupByLibrary.simpleMessage(
+      "Лимит трафика исчерпан",
+    ),
     "account": MessageLookupByLibrary.simpleMessage("Аккаунт"),
     "action": MessageLookupByLibrary.simpleMessage("Действие"),
     "action_mode": MessageLookupByLibrary.simpleMessage("Переключить режим"),
@@ -256,6 +268,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Существующие данные будут перезаписаны после подтверждения",
     ),
     "connect": MessageLookupByLibrary.simpleMessage("Подключение"),
+    "connectLoadFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось загрузить узлы",
+    ),
+    "connectNotInCanary": MessageLookupByLibrary.simpleMessage(
+      "Эта функция пока недоступна для вашего аккаунта",
+    ),
     "connected": MessageLookupByLibrary.simpleMessage("Подключено"),
     "connecting": MessageLookupByLibrary.simpleMessage("Подключение..."),
     "connection": MessageLookupByLibrary.simpleMessage("Соединение"),
@@ -264,6 +282,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Просмотр текущих данных о соединениях",
     ),
     "connectivity": MessageLookupByLibrary.simpleMessage("Связь："),
+    "contactSupport": MessageLookupByLibrary.simpleMessage(
+      "Связаться с поддержкой",
+    ),
     "content": MessageLookupByLibrary.simpleMessage("Содержание"),
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Содержимое не может быть пустым",
@@ -860,6 +881,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "restoreSuccess": MessageLookupByLibrary.simpleMessage(
       "Восстановление успешно",
     ),
+    "retry": MessageLookupByLibrary.simpleMessage("Повторить"),
     "routeAddress": MessageLookupByLibrary.simpleMessage("Адрес маршрутизации"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage(
       "Настройка адреса прослушивания маршрутизации",
@@ -1125,6 +1147,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("Значение"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Яркие"),
     "view": MessageLookupByLibrary.simpleMessage("Просмотр"),
+    "viewPlans": MessageLookupByLibrary.simpleMessage("Посмотреть тарифы"),
     "vip": MessageLookupByLibrary.simpleMessage("VIP"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "Обнаружено изменение конфигурации VPN",
