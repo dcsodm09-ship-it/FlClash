@@ -117,11 +117,12 @@ class Navigation {
             const InviteView(key: GlobalObjectKey(PageLabel.invite)),
         path: '/invite',
         // Deliberately not a bottom-nav destination: mobile's NavigationBar
-        // already carries 8 other enableHgfast items (dashboard/proxies/
-        // profiles/tools/connect/discover/support/account/vip/plans/docs
-        // combine to well past Material 3's 3-5 recommended destination
-        // count), and InviteView's own doc comment notes there is no
-        // natural top-level slot for it yet. Keep the route reachable via
+        // already carries 8 items when enableHgfast is on (dashboard,
+        // proxies, profiles, tools, connect, discover, support, account —
+        // vip/plans/docs are desktop-only and never in the mobile bar), and
+        // Material 3 recommends 3-5. A 9th item would push past that, and
+        // InviteView's own doc comment notes there is no natural top-level
+        // slot for it yet anyway. Keep the route reachable via
         // BaseNavigator.push(...) from wherever a future "我的"/account hub
         // links out to it, instead of forcing a 9th bottom-tab item.
         modes: const [],
