@@ -104,6 +104,11 @@ class AppLocalizations {
     return Intl.message('Docs', name: 'docs', desc: '', args: []);
   }
 
+  /// `Invite`
+  String get invite {
+    return Intl.message('Invite', name: 'invite', desc: '', args: []);
+  }
+
   /// `All`
   String get all {
     return Intl.message('All', name: 'all', desc: '', args: []);

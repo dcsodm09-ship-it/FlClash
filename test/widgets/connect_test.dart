@@ -193,12 +193,19 @@ void main() {
       await tester.pump();
 
       expect(find.text("Couldn't load nodes"), findsOneWidget);
-      expect(find.byType(NodeItem), findsNWidgets(5));
 
       await tester.tap(find.text('Retry'));
       await tester.pump();
       expect(syncAction.retryCount, 1);
       expect(tester.takeException(), null);
+
+      // The connect hero (power button + map + traffic pills) now sits above
+      // the node list in the same scroll view, so on a phone-sized viewport
+      // not all 5 fixture nodes are within the sliver's initial build extent
+      // without scrolling — matches real device UX.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -1000));
+      await tester.pump();
+      expect(find.byType(NodeItem), findsNWidgets(5));
     },
   );
 
@@ -528,12 +535,19 @@ void main() {
         find.text("This feature isn't open to your account yet"),
         findsOneWidget,
       );
-      expect(find.byType(NodeItem), findsNWidgets(5));
 
       await tester.tap(find.text('Retry'));
       await tester.pump();
       expect(syncAction.retryCount, 1);
       expect(tester.takeException(), null);
+
+      // The connect hero (power button + map + traffic pills) now sits above
+      // the node list in the same scroll view, so on a phone-sized viewport
+      // not all 5 fixture nodes are within the sliver's initial build extent
+      // without scrolling — matches real device UX.
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -1000));
+      await tester.pump();
+      expect(find.byType(NodeItem), findsNWidgets(5));
     },
   );
 }

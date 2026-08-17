@@ -1,3 +1,6 @@
+// TODO: swap to shared hgfast_design tokens once
+// `lib/hgfast/theme/hgfast_design.dart` lands (see hero.dart for details).
+
 import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
@@ -11,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
+import 'hero.dart';
 import 'item.dart';
 
 class ConnectView extends ConsumerStatefulWidget {
@@ -109,13 +113,17 @@ class _ConnectViewState extends ConsumerState<ConnectView> {
       ),
     };
 
-    return CommonScaffold(
-      title: appLocalizations.connect,
-      isLoading:
-          state.phase == ConnectLoadPhase.loading &&
-          hasCachedNodes &&
-          !_accessGateActive,
-      body: body,
+    return Theme(
+      data: buildConnectHeroTheme(context),
+      child: CommonScaffold(
+        title: appLocalizations.connect,
+        backgroundColor: hgHeroBackground,
+        isLoading:
+            state.phase == ConnectLoadPhase.loading &&
+            hasCachedNodes &&
+            !_accessGateActive,
+        body: body,
+      ),
     );
   }
 }
@@ -143,36 +151,40 @@ class _ConnectNodeList extends StatelessWidget {
       children: [
         ?banner,
         Expanded(
-          child: CustomScrollView(
-            slivers: [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _ConnectFilterHeaderDelegate(
-                  availableFilters: state.availableFilters,
-                  selectedFilter: state.selectedFilter,
-                  onSelected: onSelected,
-                  hintText: hintText,
-                  backgroundColor: context.colorScheme.surface,
-                ),
-              ),
-              if (state.nodes.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: NullStatus(
-                    label: appLocalizations.nullTip(appLocalizations.nodes),
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  sliver: SuperSliverList.builder(
-                    itemCount: state.nodes.length,
-                    itemBuilder: (context, index) {
-                      return NodeItem(node: state.nodes[index]);
-                    },
+          child: DecoratedBox(
+            decoration: const BoxDecoration(color: hgHeroBackground),
+            child: CustomScrollView(
+              slivers: [
+                const SliverToBoxAdapter(child: ConnectHero()),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _ConnectFilterHeaderDelegate(
+                    availableFilters: state.availableFilters,
+                    selectedFilter: state.selectedFilter,
+                    onSelected: onSelected,
+                    hintText: hintText,
+                    backgroundColor: hgHeroBackground,
                   ),
                 ),
-            ],
+                if (state.nodes.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: NullStatus(
+                      label: appLocalizations.nullTip(appLocalizations.nodes),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                    sliver: SuperSliverList.builder(
+                      itemCount: state.nodes.length,
+                      itemBuilder: (context, index) {
+                        return NodeItem(node: state.nodes[index]);
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
@@ -436,15 +448,41 @@ class _ConnectFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
               itemBuilder: (context, index) {
                 final filter = availableFilters[index];
                 final isSelected = filter == selectedFilter;
-                return CommonChip(
-                  label: Intl.message(filter.name),
-                  avatar: isSelected ? const Icon(Icons.check, size: 16) : null,
-                  labelStyle: isSelected
-                      ? TextStyle(
-                          color: context.colorScheme.onSecondaryContainer,
-                        )
-                      : null,
-                  onPressed: () => onSelected(filter),
+                // Pill-shaped chip: a gradient-filled Container carries the
+                // shape/background, CommonChip's underlying Material Chip is
+                // themed transparent so the gradient shows through.
+                return DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: const StadiumBorder(),
+                    gradient: isSelected ? hgBrandGradient : null,
+                    color: isSelected ? null : hgHeroSurface,
+                  ),
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      chipTheme: Theme.of(context).chipTheme.copyWith(
+                        backgroundColor: Colors.transparent,
+                        shape: const StadiumBorder(side: BorderSide.none),
+                        side: BorderSide.none,
+                        elevation: 0,
+                        pressElevation: 0,
+                      ),
+                    ),
+                    child: CommonChip(
+                      label: Intl.message(filter.name),
+                      avatar: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: Colors.white,
+                            )
+                          : null,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : hgTextSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      onPressed: () => onSelected(filter),
+                    ),
+                  ),
                 );
               },
             ),

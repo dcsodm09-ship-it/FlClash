@@ -53,15 +53,21 @@ class AuthTroubleContactsBody extends StatelessWidget {
     }
     return ListView.separated(
       shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: contacts.length,
-      separatorBuilder: (_, _) => const Divider(height: 0),
-      itemBuilder: (_, index) {
+      separatorBuilder: (context, _) =>
+          Divider(height: 1, color: context.colorScheme.outline),
+      itemBuilder: (context, index) {
         final contact = contacts[index];
         final label =
             contact['label']?.toString() ?? contact['type']?.toString();
         final value = contact['value']?.toString() ?? '';
         return ListTile(
+          leading: Icon(
+            Icons.support_agent_rounded,
+            color: context.colorScheme.primary,
+          ),
           title: Text(label ?? value),
           subtitle: label != null && value.isNotEmpty ? Text(value) : null,
         );

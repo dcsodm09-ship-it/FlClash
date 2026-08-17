@@ -1,5 +1,8 @@
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/pages/discover/discover_view.dart';
+import 'package:fl_clash/pages/invite/invite_view.dart';
+import 'package:fl_clash/pages/support/support_view.dart';
 import 'package:fl_clash/views/views.dart';
 import 'package:flutter/material.dart';
 
@@ -89,7 +92,7 @@ class Navigation {
         icon: const Icon(Icons.explore),
         label: PageLabel.discover,
         builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.discover)),
+            const DiscoverView(key: GlobalObjectKey(PageLabel.discover)),
         path: '/discover',
         modes: enableHgfast
             ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
@@ -100,8 +103,19 @@ class Navigation {
         icon: const Icon(Icons.support_agent),
         label: PageLabel.support,
         builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.support)),
+            const SupportView(key: GlobalObjectKey(PageLabel.support)),
         path: '/support',
+        modes: enableHgfast
+            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
+            : [],
+      ),
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.card_giftcard),
+        label: PageLabel.invite,
+        builder: (_) =>
+            const InviteView(key: GlobalObjectKey(PageLabel.invite)),
+        path: '/invite',
         modes: enableHgfast
             ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
             : [],

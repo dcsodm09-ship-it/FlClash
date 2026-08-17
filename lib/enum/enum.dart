@@ -332,6 +332,7 @@ enum PageLabel {
   connect,
   discover,
   support,
+  invite,
   account,
   vip,
   plans,

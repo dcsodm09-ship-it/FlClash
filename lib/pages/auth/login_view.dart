@@ -1,6 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
+import 'package:fl_clash/hgfast/theme/hgfast_design.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final _credentialController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
 
   @override
@@ -87,72 +89,124 @@ class _LoginViewState extends ConsumerState<LoginView> {
     BaseNavigator.push(context, const ForgotPasswordView());
   }
 
+  void _toggleObscurePassword() {
+    setState(() {
+      _obscurePassword = !_obscurePassword;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return CommonScaffold(
-      title: '登录',
-      actions: const [AuthTroubleButton()],
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _credentialController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '账号',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '密码',
-                  ),
-                  onSubmitted: (_) {
-                    _handleLogin();
-                  },
-                ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
+    final colorScheme = context.colorScheme;
+    return HgfastAuthScope(
+      child: CommonScaffold(
+        title: '登录',
+        actions: const [AuthTroubleButton()],
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Center(child: HgfastBrandMark()),
+                  const SizedBox(height: HgfastSpacing.lg),
                   Text(
-                    _errorMessage!,
-                    style: TextStyle(color: context.colorScheme.error),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: _isSubmitting ? null : _handleLogin,
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('登录'),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: _handleRegister,
-                      child: const Text('还没有账号？去注册'),
+                    '连接更快，一点即达',
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    TextButton(
-                      onPressed: _handleForgotPassword,
-                      child: const Text('忘记密码？'),
+                  ),
+                  const SizedBox(height: HgfastSpacing.xs),
+                  Text(
+                    '登录 HGFAST 账号，开启极速穿透连接',
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: HgfastSpacing.xl),
+                  HgfastTextField(
+                    controller: _credentialController,
+                    hintText: '账号 / 邮箱',
+                    leadingIcon: Icons.mail_outline_rounded,
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                  ),
+                  const SizedBox(height: HgfastSpacing.md),
+                  HgfastTextField(
+                    controller: _passwordController,
+                    hintText: '密码',
+                    leadingIcon: Icons.lock_outline_rounded,
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                      onPressed: _toggleObscurePassword,
+                    ),
+                    onSubmitted: (_) {
+                      _handleLogin();
+                    },
+                  ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: HgfastSpacing.sm),
+                    Text(
+                      _errorMessage!,
+                      style: TextStyle(color: colorScheme.error),
                     ),
                   ],
-                ),
-              ],
+                  const SizedBox(height: HgfastSpacing.md),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: _handleForgotPassword,
+                        child: const Text('忘记密码？'),
+                      ),
+                      TextButton(
+                        onPressed: _handleRegister,
+                        child: const Text('还没有账号？去注册'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: HgfastSpacing.lg),
+                  HgfastGradientButton(
+                    onPressed: _isSubmitting ? null : _handleLogin,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.power_settings_new_rounded),
+                              SizedBox(width: HgfastSpacing.xs),
+                              Text('登录'),
+                            ],
+                          ),
+                  ),
+                  const SizedBox(height: HgfastSpacing.lg),
+                  const HgfastAuthFooterCaption(
+                    text: 'HGFAST v1.0.0 · 登录即表示同意《用户协议》与《隐私政策》',
+                  ),
+                ],
+              ),
             ),
           ),
         ),
