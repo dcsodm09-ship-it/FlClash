@@ -74,6 +74,9 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
                         }
                         return AuthTroubleContactsBody(
                           contacts: snapshot.data ?? const [],
+                          // Already inside this screen's own
+                          // SingleChildScrollView.
+                          physics: const NeverScrollableScrollPhysics(),
                         );
                       },
                     ),

@@ -100,8 +100,17 @@ class _DiscoverViewState extends ConsumerState<DiscoverView> {
 
   Future<_DiscoverData> _load() async {
     final repository = ref.read(hgfastRepositoryProvider);
-    final announcementsResult = await repository.announcements();
-    final bootstrapResult = await repository.bootstrap();
+    // These two calls are independent — run them concurrently instead of
+    // serially so this screen's first paint isn't twice as slow as it needs
+    // to be.
+    final results = await Future.wait([
+      repository.announcements(),
+      repository.bootstrap(),
+    ]);
+    final announcementsResult =
+        results[0] as HgfastResult<HgfastAnnouncementCatalog, HgfastError>;
+    final bootstrapResult =
+        results[1] as HgfastResult<HgfastBootstrap, HgfastError>;
     final announcements = switch (announcementsResult) {
       HgfastResultSuccess<HgfastAnnouncementCatalog, HgfastError>(
         :final value,

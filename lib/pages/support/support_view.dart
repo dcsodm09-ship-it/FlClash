@@ -14,7 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // duplicating them — this file only *imports* lib/pages/auth/auth_shell.dart,
 // it does not edit it.
 import '../auth/auth_shell.dart'
-    show AuthTroubleContactsBody, fetchFallbackContacts;
+    show AuthTroubleContactsBody, extractFallbackContacts;
 import '../hgfast_shared/hgfast_visual_kit.dart';
 
 // ---------------------------------------------------------------------------
@@ -95,6 +95,10 @@ class _SupportViewState extends ConsumerState<SupportView> {
   }
 
   Future<_SupportData> _load() async {
+    // Read the repository once, before any `await`, and reuse it below —
+    // touching `ref` again after an await risks a disposed-widget StateError
+    // if the user has already navigated away (this nav item is `keep: false`
+    // so switching tabs disposes it).
     final repository = ref.read(hgfastRepositoryProvider);
     final configResult = await repository.config();
     final aiAgentUrl = switch (configResult) {
@@ -102,7 +106,13 @@ class _SupportViewState extends ConsumerState<SupportView> {
         _resolveAiAgentUrl(value),
       HgfastResultFailure<HgfastConfig, HgfastError>() => null,
     };
-    final contacts = await fetchFallbackContacts(ref);
+    final bootstrapResult = await repository.bootstrap();
+    final contacts = switch (bootstrapResult) {
+      HgfastResultSuccess<HgfastBootstrap, HgfastError>(:final value) =>
+        extractFallbackContacts(value),
+      HgfastResultFailure<HgfastBootstrap, HgfastError>() =>
+        const <Map<String, Object?>>[],
+    };
     return _SupportData(aiAgentUrl: aiAgentUrl, contacts: contacts);
   }
 
@@ -149,7 +159,11 @@ class _SupportViewState extends ConsumerState<SupportView> {
                   const SizedBox(height: 12),
                   HgSurfaceCard(
                     padding: EdgeInsets.zero,
-                    child: AuthTroubleContactsBody(contacts: data.contacts),
+                    child: AuthTroubleContactsBody(
+                      contacts: data.contacts,
+                      // Already inside this screen's own outer ListView.
+                      physics: const NeverScrollableScrollPhysics(),
+                    ),
                   ),
                 ],
               ),

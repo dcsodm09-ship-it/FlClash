@@ -41,7 +41,20 @@ Future<List<Map<String, Object?>>> fetchFallbackContacts(WidgetRef ref) async {
 class AuthTroubleContactsBody extends StatelessWidget {
   final List<Map<String, Object?>> contacts;
 
-  const AuthTroubleContactsBody({super.key, required this.contacts});
+  /// Defaults to null (the platform's normal scrollable physics). Pass
+  /// [NeverScrollableScrollPhysics] only when this widget is already
+  /// embedded inside another scrollable (e.g. an outer SingleChildScrollView
+  /// or ListView) — leaving it scrollable elsewhere (in particular inside
+  /// showAuthTroubleSheet's bottom sheet, which is height-capped and NOT
+  /// scroll-controlled) is required so contacts beyond the sheet's visible
+  /// height stay reachable instead of being silently clipped.
+  final ScrollPhysics? physics;
+
+  const AuthTroubleContactsBody({
+    super.key,
+    required this.contacts,
+    this.physics,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +66,7 @@ class AuthTroubleContactsBody extends StatelessWidget {
     }
     return ListView.separated(
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: physics,
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: contacts.length,
       separatorBuilder: (context, _) =>
