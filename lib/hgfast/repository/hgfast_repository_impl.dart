@@ -1357,30 +1357,220 @@ final class HgfastRepositoryImpl implements HgfastRepository {
 
   // Real write path: POST /auth/reset/confirm. Unauthenticated, same reason
   // as requestPasswordReset(). Unlike that method this carries a real new
-  // password — once the write path actually opens this should be revisited
-  // to seal the body the same way login's sealed_credentials protects the
-  // login password in transit (deliberately deferred, not forgotten: today
-  // the server returns the gated error before ever parsing the body, so
-  // there is nothing yet to protect, and doing HPKE sealing correctly is
-  // not something to rush alongside this contract-shell change).
+  // password, so it is sealed against the bootstrap prekey with hpkeSealBase
+  // — the same primitive login's sealed_credentials uses — instead of riding
+  // along as plaintext JSON. An earlier version of this method deferred that
+  // (comment used to say "nothing to protect yet, server 403s before parsing
+  // the body"), but an Opus review correctly called that out as a P1: the
+  // body is genuinely on the wire on every tap regardless of what the server
+  // does with it, and nothing here should fail open the moment the gate is
+  // lifted. See _confirmPasswordReset below.
   @override
   Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
     required String email,
     required String code,
     required String newPassword,
   }) {
-    return _call<HgfastJson>(
-      method: 'POST',
-      pathname: '/auth/reset/confirm',
-      authed: false,
-      sealed: false,
-      resource: HgfastResource.confirmPasswordReset,
-      jsonBody: <String, Object?>{
-        'email': email,
-        'code': code,
-        'new_password': newPassword,
-      },
-      parse: (body) => body,
+    return _confirmPasswordReset(
+      email: email,
+      code: code,
+      newPassword: newPassword,
+      allowClockRetry: true,
+      allowPrekeyRetry: true,
     );
+  }
+
+  Future<HgfastResult<HgfastJson, HgfastError>> _confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+    required bool allowClockRetry,
+    required bool allowPrekeyRetry,
+  }) async {
+    final segment = _platformSegment;
+    if (segment == null) {
+      return const HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'HGFAST client_api is not available on this platform yet',
+        ),
+      );
+    }
+    final prekeyError = await _ensurePrekey();
+    if (prekeyError != null) {
+      return HgfastResult.failure(prekeyError);
+    }
+    final prekeyId = _cachedPrekeyId;
+    final prekeyPubRaw = _cachedPrekeyPubRaw;
+    if (prekeyId == null || prekeyPubRaw == null) {
+      return const HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'bootstrap prekey unavailable',
+        ),
+      );
+    }
+
+    final fullPath =
+        '/api/client/${segment.pathSegment}/v1/auth/reset/confirm';
+    final nonce = _generateNonce();
+    final timestamp = _currentTimestamp();
+    final deviceId = (await _deviceIdentity()).deviceId;
+
+    // No separate client_eph_pub field is needed here the way login sends
+    // one: hpkeSealBase embeds its own single-use sender ephemeral pubkey
+    // (`enc`) as the first 32 bytes of the sealed blob it returns, and this
+    // call — unlike login — doesn't go on to derive a follow-on E2EE session
+    // key that would need a second, separately-agreed ephemeral key. `email`
+    // is bound into the AAD (unlike login's AAD) so a captured sealed blob
+    // can't be replayed against a different account by swapping the outer
+    // JSON's email field without also resealing.
+    final sealAad = jcs.jcsBytes(<String, Object?>{
+      'api_path': fullPath,
+      'device': deviceId,
+      'email': email,
+      'nonce': nonce,
+      'platform': segment.pathSegment,
+      'prekey_id': prekeyId,
+      'ts': timestamp,
+    });
+    final Uint8List sealedNewPassword;
+    try {
+      sealedNewPassword = await hpke.hpkeSealBase(
+        recipientPublicKeyRaw: prekeyPubRaw,
+        info: utf8.encode('HGFAST-REQ-SEAL-$fullPath-v1'),
+        aad: sealAad,
+        plaintext: utf8.encode(newPassword),
+        ephemeralSeed: _hpkeSealEphemeralSeed(),
+      );
+    } on Object catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'new password seal failed: ${error.runtimeType}',
+        ),
+      );
+    }
+
+    final requestBody = <String, Object?>{
+      'email': email,
+      'code': code,
+      'prekey_id': prekeyId,
+      'sealed_new_password': primitives.toBase64(sealedNewPassword),
+    };
+    final bodyJson = jsonEncode(requestBody);
+    final bodyBytes = utf8.encode(bodyJson);
+    final headers = reqsign.buildRequestHeaders(
+      method: 'POST',
+      pathname: fullPath,
+      body: bodyBytes,
+      nonce: nonce,
+      timestamp: timestamp,
+      deviceId: deviceId,
+      token: '',
+    );
+
+    final String host;
+    try {
+      host = _endpointPool.currentHost();
+    } on HgfastEndpointPoolConfigurationException catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(message: error.toString()),
+      );
+    }
+
+    final Response<Object?> response;
+    try {
+      response = await _dio.requestUri<Object?>(
+        Uri.https(host, fullPath),
+        data: bodyJson,
+        options: Options(
+          method: 'POST',
+          headers: headers.toHeaders(),
+          contentType: Headers.jsonContentType,
+          validateStatus: (_) => true,
+          responseType: ResponseType.json,
+        ),
+      );
+    } on Object catch (error) {
+      _endpointPool.reportFailure();
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'network error: ${error.runtimeType}',
+        ),
+      );
+    }
+
+    final status = response.statusCode ?? 0;
+    final data = response.data;
+    if (status != 200) {
+      _endpointPool.reportFailure();
+      final respCode = _stringOrNull(data, 'code');
+      final respMessage = _stringOrNull(data, 'message');
+      if (allowClockRetry && respCode != null && respCode.startsWith('C1_')) {
+        final resynced = await _resyncClock();
+        if (resynced) {
+          return _confirmPasswordReset(
+            email: email,
+            code: code,
+            newPassword: newPassword,
+            allowClockRetry: false,
+            allowPrekeyRetry: allowPrekeyRetry,
+          );
+        }
+      }
+      if (allowPrekeyRetry && respCode == 'SEAL_OPEN_FAIL') {
+        _cachedPrekeyId = null;
+        _cachedPrekeyPubRaw = null;
+        return _confirmPasswordReset(
+          email: email,
+          code: code,
+          newPassword: newPassword,
+          allowClockRetry: allowClockRetry,
+          allowPrekeyRetry: false,
+        );
+      }
+      return HgfastResult.failure(
+        mapHgfastErrorCode(
+          respCode,
+          respMessage,
+          HgfastResource.confirmPasswordReset,
+        ),
+      );
+    }
+    if (data is! Map) {
+      return const HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'malformed response envelope',
+        ),
+      );
+    }
+
+    final verified = await respwrap.verifySignedResponse(
+      response: Map<String, Object?>.from(data),
+      rootPublicKeys: _rootPublicKeys,
+      rootEpoch: _rootEpoch,
+      expect: respwrap.SignedResponseExpectation(
+        userId: 0,
+        sessionId: 'sess-anon',
+        requestHash: headers.requestHash,
+        nonce: nonce,
+        now: int.parse(timestamp),
+      ),
+    );
+    if (verified is respwrap.SignedResponseFailed) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(message: verified.error),
+      );
+    }
+    final rawBody = (verified as respwrap.SignedResponseOk).body;
+    final Map<String, Object?> bodyMap;
+    try {
+      bodyMap = _asMap(rawBody);
+    } on Object catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'malformed body: ${error.runtimeType}',
+        ),
+      );
+    }
+    return HgfastResult.success(bodyMap);
   }
 }

@@ -125,7 +125,7 @@ void main() {
             _FakeRepository(
               contacts: const [],
               requestPasswordResetResult: const HgfastResult.failure(
-                HgfastError.c1('WRITE_DISABLED'),
+                HgfastError.writeDisabled(),
               ),
             ),
           ),
@@ -205,7 +205,7 @@ void main() {
             _FakeRepository(
               contacts: const [],
               confirmPasswordResetResult: const HgfastResult.failure(
-                HgfastError.c1('WRITE_NOT_IMPLEMENTED'),
+                HgfastError.writeNotImplemented(),
               ),
             ),
           ),
@@ -241,14 +241,58 @@ void main() {
     },
   );
 
-  testWidgets('empty fields show a validation message, never call the repository', (
+  testWidgets(
+    'a real confirmPasswordReset success shows the real "password reset" '
+    'message',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          hgfastRepositoryProvider.overrideWithValue(
+            _FakeRepository(
+              contacts: const [],
+              confirmPasswordResetResult: const HgfastResult.success(
+                <String, Object?>{},
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: ForgotPasswordView()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, '账号 / 邮箱'),
+        'user@example.com',
+      );
+      await tester.enterText(find.widgetWithText(TextField, '验证码'), '123456');
+      await tester.enterText(
+        find.widgetWithText(TextField, '新密码'),
+        'newpass123',
+      );
+      await tester.tap(find.text('重置密码'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('密码已重置，请使用新密码登录'), findsOneWidget);
+    },
+  );
+
+  testWidgets('empty fields show a validation message and never call the repository', (
     tester,
   ) async {
+    final repository = _FakeRepository(contacts: const []);
     final container = ProviderContainer(
       overrides: [
-        hgfastRepositoryProvider.overrideWithValue(
-          _FakeRepository(contacts: const []),
-        ),
+        hgfastRepositoryProvider.overrideWithValue(repository),
       ],
     );
     addTearDown(container.dispose);
@@ -263,10 +307,18 @@ void main() {
     await tester.pump();
     await tester.pump();
 
+    // Empty email: neither button should call the repository.
+    await tester.tap(find.text('获取验证码'));
+    await tester.pump();
+    expect(find.text('请输入邮箱地址'), findsOneWidget);
+    expect(repository.requestPasswordResetCalls, 0);
+
     await tester.tap(find.text('重置密码'));
     await tester.pump();
 
     expect(find.text('请填写邮箱、验证码和新密码'), findsOneWidget);
+    expect(repository.requestPasswordResetCalls, 0);
+    expect(repository.confirmPasswordResetCalls, 0);
   });
 }
 
@@ -294,16 +346,18 @@ final class _FakeRepository implements HgfastRepository {
   _FakeRepository({
     required this.contacts,
     this.requestPasswordResetResult = const HgfastResult.failure(
-      HgfastError.c1('WRITE_DISABLED'),
+      HgfastError.writeDisabled(),
     ),
     this.confirmPasswordResetResult = const HgfastResult.failure(
-      HgfastError.c1('WRITE_DISABLED'),
+      HgfastError.writeDisabled(),
     ),
   });
 
   final List<Map<String, Object?>> contacts;
   final HgfastResult<HgfastJson, HgfastError> requestPasswordResetResult;
   final HgfastResult<HgfastJson, HgfastError> confirmPasswordResetResult;
+  int requestPasswordResetCalls = 0;
+  int confirmPasswordResetCalls = 0;
 
   @override
   Future<HgfastResult<HgfastSession, HgfastError>> login({
@@ -400,6 +454,7 @@ final class _FakeRepository implements HgfastRepository {
   Future<HgfastResult<HgfastJson, HgfastError>> requestPasswordReset({
     required String email,
   }) async {
+    requestPasswordResetCalls++;
     return requestPasswordResetResult;
   }
 
@@ -409,6 +464,7 @@ final class _FakeRepository implements HgfastRepository {
     required String code,
     required String newPassword,
   }) async {
+    confirmPasswordResetCalls++;
     return confirmPasswordResetResult;
   }
 }
