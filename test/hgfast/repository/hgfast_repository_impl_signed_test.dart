@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/repository/hgfast_endpoints.dart';
 import 'package:fl_clash/hgfast/repository/hgfast_repository_impl.dart';
 import 'package:fl_clash/hgfast/repository/hgfast_result_x.dart';
@@ -114,6 +115,7 @@ class _RoutedHttpClientAdapter implements HttpClientAdapter {
   _RoutedHttpClientAdapter();
 
   String? capturedLoginRequestBody;
+  String? capturedResetConfirmRequestBody;
 
   @override
   void close({bool force = false}) {}
@@ -145,6 +147,29 @@ class _RoutedHttpClientAdapter implements HttpClientAdapter {
       return ResponseBody.fromString(
         jsonEncode(_loginResponseBody),
         200,
+        headers: <String, List<String>>{
+          'content-type': <String>['application/json'],
+        },
+      );
+    }
+    if (path.endsWith('/auth/reset/confirm')) {
+      final builder = BytesBuilder();
+      if (requestStream != null) {
+        await for (final chunk in requestStream) {
+          builder.add(chunk);
+        }
+      }
+      capturedResetConfirmRequestBody = utf8.decode(builder.toBytes());
+      // Mirrors the real backend today: the write path is gated before it
+      // ever parses the body (app/core/client_api/protocol.js's
+      // /auth/reset/confirm handler). The test only cares that the request
+      // it captured above is genuinely sealed, not about this response.
+      return ResponseBody.fromString(
+        jsonEncode(<String, Object?>{
+          'code': 'WRITE_DISABLED',
+          'message': '写路径未开放(gated)',
+        }),
+        403,
         headers: <String, List<String>>{
           'content-type': <String>['application/json'],
         },
@@ -254,6 +279,72 @@ void main() {
 
       expect(result.successValue, isNull);
       expect(result.failureError?.message, contains('BadSignature'));
+    },
+  );
+
+  test(
+    'confirmPasswordReset() sends email/code/new_password sealed together, '
+    'never as plaintext JSON fields',
+    () async {
+      final adapter = _RoutedHttpClientAdapter();
+      final repository = await _buildSignedRepository(adapter);
+
+      final result = await repository.confirmPasswordReset(
+        email: 'user@example.com',
+        code: '123456',
+        newPassword: 'hunter2-new',
+      );
+
+      // Gated 403 today (matches the real, currently-deployed backend) —
+      // this test is about what was sent, not this response.
+      expect(result.successValue, isNull);
+      expect(result.failureError, isA<HgfastWriteDisabled>());
+
+      final rawBody = adapter.capturedResetConfirmRequestBody;
+      expect(rawBody, isNotNull);
+
+      // None of the sensitive values may appear anywhere in the raw bytes
+      // that hit the wire — not as a JSON field value, not accidentally
+      // smuggled in through some other path (e.g. a stray debug field).
+      expect(rawBody, isNot(contains('user@example.com')));
+      expect(rawBody, isNot(contains('123456')));
+      expect(rawBody, isNot(contains('hunter2-new')));
+
+      final decoded = jsonDecode(rawBody!) as Map<String, Object?>;
+      // Exactly {prekey_id, sealed_reset} — no plaintext email/code/
+      // new_password keys alongside the sealed blob.
+      expect(decoded.keys.toSet(), <String>{'prekey_id', 'sealed_reset'});
+      expect(decoded['prekey_id'], 'test-prekey-1');
+
+      final sealedBytes = primitives.fromBase64(
+        decoded['sealed_reset']! as String,
+      );
+      // enc (32 bytes, hpkeEncLength) + ChaCha20-Poly1305 ciphertext+tag
+      // (plaintext length + 16-byte tag) for the {email, code, new_password}
+      // JSON object — i.e. plausibly a real HPKE blob, not a bare base64
+      // re-encoding of the plaintext.
+      expect(sealedBytes.length, greaterThan(32));
+    },
+  );
+
+  test(
+    'confirmPasswordReset() does not throw when the email contains a '
+    'control character (regression: jcs.jcsBytes used to reject these when '
+    'email was bound into the AAD, leaving the UI stuck)',
+    () async {
+      final adapter = _RoutedHttpClientAdapter();
+      final repository = await _buildSignedRepository(adapter);
+
+      final result = await repository.confirmPasswordReset(
+        email: 'user\u0001@example.com',
+        code: '123456',
+        newPassword: 'hunter2-new',
+      );
+
+      // Must resolve to an ordinary failure result, never an uncaught
+      // exception that would leave a caller's isConfirming flag stuck true.
+      expect(result.successValue, isNull);
+      expect(result.failureError, isA<HgfastWriteDisabled>());
     },
   );
 }

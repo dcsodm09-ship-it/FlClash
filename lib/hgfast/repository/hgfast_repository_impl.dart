@@ -1357,14 +1357,29 @@ final class HgfastRepositoryImpl implements HgfastRepository {
 
   // Real write path: POST /auth/reset/confirm. Unauthenticated, same reason
   // as requestPasswordReset(). Unlike that method this carries a real new
-  // password, so it is sealed against the bootstrap prekey with hpkeSealBase
-  // — the same primitive login's sealed_credentials uses — instead of riding
-  // along as plaintext JSON. An earlier version of this method deferred that
-  // (comment used to say "nothing to protect yet, server 403s before parsing
-  // the body"), but an Opus review correctly called that out as a P1: the
-  // body is genuinely on the wire on every tap regardless of what the server
-  // does with it, and nothing here should fail open the moment the gate is
-  // lifted. See _confirmPasswordReset below.
+  // password, so the whole {email, code, new_password} object is sealed
+  // against the bootstrap prekey with hpkeSealBase — the same primitive and
+  // the same "seal the whole credential object" shape login's
+  // sealed_credentials uses for {credential, password} — instead of riding
+  // along as plaintext JSON. Two earlier versions of this method fell short
+  // of that: the first left new_password entirely in plaintext (flagged as a
+  // P1 by an Opus review: "the body is genuinely on the wire on every tap
+  // regardless of what the server does with it, and nothing here should fail
+  // open the moment the gate is lifted"); the fix for that sealed only
+  // new_password and bound the still-plaintext email into the AAD instead, on
+  // the theory that email+code+password isn't attacker-useful without the
+  // password. A follow-up Opus review pointed out that theory doesn't hold —
+  // email+code+chosen-password is a full account takeover on its own, so the
+  // same "nothing should fail open" argument applies to code just as much as
+  // to new_password — and separately caught a real bug in the AAD-binding
+  // approach: jcs.jcsBytes (unlike jsonEncode) throws HgfastJcsException on
+  // control characters or lone surrogates in the AAD, so a stray control
+  // character pasted into the email field left the "获取验证码"/"重置密码"
+  // button permanently stuck spinning (an uncaught async rethrow). Sealing
+  // the whole object — like login always did — closes both: nothing sensitive
+  // stays in plaintext, and email now goes through jsonEncode (which escapes
+  // rather than rejects control characters) instead of jcs.jcsBytes. See
+  // _confirmPasswordReset below.
   @override
   Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
     required String email,
@@ -1419,41 +1434,51 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     // one: hpkeSealBase embeds its own single-use sender ephemeral pubkey
     // (`enc`) as the first 32 bytes of the sealed blob it returns, and this
     // call — unlike login — doesn't go on to derive a follow-on E2EE session
-    // key that would need a second, separately-agreed ephemeral key. `email`
-    // is bound into the AAD (unlike login's AAD) so a captured sealed blob
-    // can't be replayed against a different account by swapping the outer
-    // JSON's email field without also resealing.
+    // key that would need a second, separately-agreed ephemeral key. The AAD
+    // (like login's) contains only values the server can already reconstruct
+    // byte-exactly from the request itself (URL, headers, prekey_id) —
+    // nothing user-controlled — so there's no risk of a future server-side
+    // normalization (e.g. lowercasing email) breaking seal verification the
+    // way binding a raw user string into the AAD would.
     final sealAad = jcs.jcsBytes(<String, Object?>{
       'api_path': fullPath,
       'device': deviceId,
-      'email': email,
       'nonce': nonce,
       'platform': segment.pathSegment,
       'prekey_id': prekeyId,
       'ts': timestamp,
     });
-    final Uint8List sealedNewPassword;
+    // email/code/new_password travel together inside the seal, exactly the
+    // way login seals {credential, password} together — not just
+    // new_password alone — since email+code+an-attacker-chosen-password is
+    // already a complete account takeover on its own.
+    final resetPlaintext = utf8.encode(
+      jsonEncode(<String, Object?>{
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      }),
+    );
+    final Uint8List sealedReset;
     try {
-      sealedNewPassword = await hpke.hpkeSealBase(
+      sealedReset = await hpke.hpkeSealBase(
         recipientPublicKeyRaw: prekeyPubRaw,
         info: utf8.encode('HGFAST-REQ-SEAL-$fullPath-v1'),
         aad: sealAad,
-        plaintext: utf8.encode(newPassword),
+        plaintext: resetPlaintext,
         ephemeralSeed: _hpkeSealEphemeralSeed(),
       );
     } on Object catch (error) {
       return HgfastResult.failure(
         HgfastError.clientApiStateUnavailable(
-          message: 'new password seal failed: ${error.runtimeType}',
+          message: 'reset payload seal failed: ${error.runtimeType}',
         ),
       );
     }
 
     final requestBody = <String, Object?>{
-      'email': email,
-      'code': code,
       'prekey_id': prekeyId,
-      'sealed_new_password': primitives.toBase64(sealedNewPassword),
+      'sealed_reset': primitives.toBase64(sealedReset),
     };
     final bodyJson = jsonEncode(requestBody);
     final bodyBytes = utf8.encode(bodyJson);
