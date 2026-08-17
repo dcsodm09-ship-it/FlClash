@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart' as cg;
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -52,6 +53,24 @@ final class _HgfastMappedError implements Exception {
 
 const Object _autoDetectPlatformSegment = Object();
 
+String _defaultGenerateNonce() {
+  final random = Random.secure();
+  final bytes = Uint8List.fromList(
+    List<int>.generate(16, (_) => random.nextInt(256)),
+  );
+  return primitives.toHex(bytes);
+}
+
+int _defaultClockNowSeconds() {
+  return DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+}
+
+Future<cg.SimpleKeyPair> _defaultEphemeralKeyPairGenerator() {
+  return primitives.x25519NewKeyPair();
+}
+
+List<int>? _defaultNullSeed() => null;
+
 final class HgfastRepositoryImpl implements HgfastRepository {
   HgfastRepositoryImpl({
     Dio? dio,
@@ -61,6 +80,10 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     List<List<int>>? rootPublicKeys,
     int? rootEpoch,
     Object? platformSegment = _autoDetectPlatformSegment,
+    String Function()? nonceGenerator,
+    int Function()? clockNowSeconds,
+    Future<cg.SimpleKeyPair> Function()? ephemeralKeyPairGenerator,
+    List<int>? Function()? hpkeSealEphemeralSeed,
   }) : _dio =
            dio ??
            Dio(
@@ -76,7 +99,12 @@ final class HgfastRepositoryImpl implements HgfastRepository {
        _rootEpoch = rootEpoch ?? trust_roots.productionRootEpoch,
        _platformSegment = identical(platformSegment, _autoDetectPlatformSegment)
            ? resolveHgfastPlatformSegment()
-           : platformSegment as HgfastPlatformSegment?;
+           : platformSegment as HgfastPlatformSegment?,
+       _nonceGenerator = nonceGenerator ?? _defaultGenerateNonce,
+       _clockNowSeconds = clockNowSeconds ?? _defaultClockNowSeconds,
+       _ephemeralKeyPairGenerator =
+           ephemeralKeyPairGenerator ?? _defaultEphemeralKeyPairGenerator,
+       _hpkeSealEphemeralSeed = hpkeSealEphemeralSeed ?? _defaultNullSeed;
 
   final Dio _dio;
   final HgfastEndpointPool _endpointPool;
@@ -85,6 +113,10 @@ final class HgfastRepositoryImpl implements HgfastRepository {
   final List<List<int>> _rootPublicKeys;
   final int _rootEpoch;
   final HgfastPlatformSegment? _platformSegment;
+  final String Function() _nonceGenerator;
+  final int Function() _clockNowSeconds;
+  final Future<cg.SimpleKeyPair> Function() _ephemeralKeyPairGenerator;
+  final List<int>? Function() _hpkeSealEphemeralSeed;
 
   HgfastDeviceIdentity? _deviceIdentityCache;
   _HgfastActiveSession? _activeSession;
@@ -142,7 +174,7 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     final timestamp = _currentTimestamp();
     final deviceId = (await _deviceIdentity()).deviceId;
 
-    final loginEphemeralKeyPair = await primitives.x25519NewKeyPair();
+    final loginEphemeralKeyPair = await _ephemeralKeyPairGenerator();
     final loginEphemeralPublicKey = await loginEphemeralKeyPair
         .extractPublicKey();
     final loginEphemeralPublicKeyRaw = Uint8List.fromList(
@@ -174,6 +206,7 @@ final class HgfastRepositoryImpl implements HgfastRepository {
         info: utf8.encode('HGFAST-REQ-SEAL-$fullPath-v1'),
         aad: sealAad,
         plaintext: credentialsPlaintext,
+        ephemeralSeed: _hpkeSealEphemeralSeed(),
       );
     } on Object catch (error) {
       return HgfastResult.failure(
@@ -520,7 +553,7 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     final timestamp = _currentTimestamp();
     final deviceId = (await _deviceIdentity()).deviceId;
 
-    final ephemeralKeyPair = await primitives.x25519NewKeyPair();
+    final ephemeralKeyPair = await _ephemeralKeyPairGenerator();
     final ephemeralPublicKey = await ephemeralKeyPair.extractPublicKey();
     final ephemeralPublicKeyRaw = Uint8List.fromList(
       ephemeralPublicKey.bytes,
@@ -709,9 +742,7 @@ final class HgfastRepositoryImpl implements HgfastRepository {
       final prekeyId = prekeyMap['prekey_id'];
       final prekeyPubB64 = prekeyMap['prekey_pub'];
       final validToEpoch = prekeyMap['valid_to_epoch'];
-      final localNowEpoch =
-          DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000 +
-          _clockOffsetSeconds;
+      final localNowEpoch = _clockNowSeconds() + _clockOffsetSeconds;
       final isExpired = validToEpoch is int && validToEpoch < localNowEpoch;
       if (prekeyId is String && prekeyPubB64 is String && !isExpired) {
         try {
@@ -912,7 +943,7 @@ final class HgfastRepositoryImpl implements HgfastRepository {
       if (serverTime is! int) {
         return false;
       }
-      final localNow = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+      final localNow = _clockNowSeconds();
       _clockOffsetSeconds = serverTime - localNow;
       return true;
     } on Object {
@@ -920,17 +951,10 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     }
   }
 
-  String _generateNonce() {
-    final random = Random.secure();
-    final bytes = Uint8List.fromList(
-      List<int>.generate(16, (_) => random.nextInt(256)),
-    );
-    return primitives.toHex(bytes);
-  }
+  String _generateNonce() => _nonceGenerator();
 
   String _currentTimestamp() {
-    final localNow = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-    return (localNow + _clockOffsetSeconds).toString();
+    return (_clockNowSeconds() + _clockOffsetSeconds).toString();
   }
 
   Future<HgfastDeviceIdentity> _deviceIdentity() async {

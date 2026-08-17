@@ -154,8 +154,11 @@ Future<Uint8List> hpkeSealBase({
   required List<int> info,
   required List<int> aad,
   required List<int> plaintext,
+  List<int>? ephemeralSeed,
 }) async {
-  final ephemeralKeyPair = await primitives.x25519NewKeyPair();
+  final ephemeralKeyPair = ephemeralSeed == null
+      ? await primitives.x25519NewKeyPair()
+      : await primitives.x25519KeyPairFromSeed(ephemeralSeed);
   final dh = await primitives.x25519SharedSecret(
     keyPair: ephemeralKeyPair,
     remotePublicKeyRaw: recipientPublicKeyRaw,

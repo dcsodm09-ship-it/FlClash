@@ -120,6 +120,24 @@ void main() {
     },
   );
 
+  test(
+    'a repository built with no injected nonceGenerator still sends a '
+    'fresh random nonce on every request',
+    () async {
+      final sentNonces = <String>[];
+      final repository = _buildRepository((options) {
+        sentNonces.add(options.headers['X-HG-Nonce'] as String);
+        return _jsonResponse(<String, Object?>{'code': 'CLIENT_API_STATE_UNAVAILABLE'}, 503);
+      });
+
+      await repository.config();
+      await repository.config();
+
+      expect(sentNonces, hasLength(2));
+      expect(sentNonces[0], isNot(sentNonces[1]));
+    },
+  );
+
   test('an unknown platform fails closed without touching the network', () async {
     var called = false;
     final platform = TestFlutterSecureStoragePlatform(<String, String>{});
