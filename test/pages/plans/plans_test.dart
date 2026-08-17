@@ -385,4 +385,19 @@ final class _FakeRepository implements HgfastRepository {
   }) async {
     return createOrderResult;
   }
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> requestPasswordReset({
+    required String email,
+  }) async {
+    return const HgfastResult.success(<String, Object?>{});
+  }
+
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    return const HgfastResult.success(<String, Object?>{});
+  }
 }

@@ -122,4 +122,25 @@ abstract interface class HgfastRepository {
     required String period,
     String? couponCode,
   });
+
+  // Real write path: POST /auth/reset/request and POST /auth/reset/confirm.
+  // Server-side these are currently permanently gated (403 WRITE_DISABLED,
+  // or 501 WRITE_NOT_IMPLEMENTED once the write gate itself is on) — same
+  // shape as createOrder()/`/order` above, and for the same reason: the
+  // underlying password-change capability already exists and is hardened
+  // in the panel's own `/api/sendEmailCode` (purpose:'reset') and
+  // `/api/resetPassword`, but client_api's data layer is documented
+  // read-only, so this is deliberately not reimplemented here — these
+  // methods perform the real signed calls and are expected to fail against
+  // the live backend today; callers must handle that honestly (never
+  // fabricate a sent-code or password-changed success).
+  Future<HgfastResult<HgfastJson, HgfastError>> requestPasswordReset({
+    required String email,
+  });
+
+  Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
 }

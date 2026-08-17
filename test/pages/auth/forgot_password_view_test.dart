@@ -102,11 +102,171 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ForgotPasswordView), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, '返回登录'));
+    // The form is taller now (real email/code/password fields), so on the
+    // default test viewport the back button can sit below the fold —
+    // scroll it into view before tapping rather than assuming it's already
+    // visible.
+    await tester.ensureVisible(find.widgetWithText(TextButton, '返回登录'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, '返回登录'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ForgotPasswordView), findsNothing);
     expect(find.text('open forgot password'), findsOneWidget);
+  });
+
+  testWidgets(
+    'requesting a code against a gated backend shows the honest '
+    '"not available yet" message, never a fake "sent" success',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          hgfastRepositoryProvider.overrideWithValue(
+            _FakeRepository(
+              contacts: const [],
+              requestPasswordResetResult: const HgfastResult.failure(
+                HgfastError.c1('WRITE_DISABLED'),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: ForgotPasswordView()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, '账号 / 邮箱'),
+        'user@example.com',
+      );
+      await tester.tap(find.text('获取验证码'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('在线找回密码暂未开放，请使用下方联系方式'), findsOneWidget);
+      expect(find.textContaining('验证码已发送'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a real requestPasswordReset success shows the real "sent" message',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          hgfastRepositoryProvider.overrideWithValue(
+            _FakeRepository(
+              contacts: const [],
+              requestPasswordResetResult: const HgfastResult.success(
+                <String, Object?>{},
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: ForgotPasswordView()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, '账号 / 邮箱'),
+        'user@example.com',
+      );
+      await tester.tap(find.text('获取验证码'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('验证码已发送，请查收邮箱'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'confirming reset against a gated backend shows the honest message, '
+    'never a fake "password reset" success',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          hgfastRepositoryProvider.overrideWithValue(
+            _FakeRepository(
+              contacts: const [],
+              confirmPasswordResetResult: const HgfastResult.failure(
+                HgfastError.c1('WRITE_NOT_IMPLEMENTED'),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: ForgotPasswordView()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, '账号 / 邮箱'),
+        'user@example.com',
+      );
+      await tester.enterText(find.widgetWithText(TextField, '验证码'), '123456');
+      await tester.enterText(
+        find.widgetWithText(TextField, '新密码'),
+        'newpass123',
+      );
+      await tester.tap(find.text('重置密码'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('在线找回密码暂未开放，请使用下方联系方式'), findsOneWidget);
+      expect(find.textContaining('密码已重置'), findsNothing);
+    },
+  );
+
+  testWidgets('empty fields show a validation message, never call the repository', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        hgfastRepositoryProvider.overrideWithValue(
+          _FakeRepository(contacts: const []),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const _TestApp(child: ForgotPasswordView()),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('重置密码'));
+    await tester.pump();
+
+    expect(find.text('请填写邮箱、验证码和新密码'), findsOneWidget);
   });
 }
 
@@ -131,9 +291,19 @@ class _TestApp extends StatelessWidget {
 }
 
 final class _FakeRepository implements HgfastRepository {
-  _FakeRepository({required this.contacts});
+  _FakeRepository({
+    required this.contacts,
+    this.requestPasswordResetResult = const HgfastResult.failure(
+      HgfastError.c1('WRITE_DISABLED'),
+    ),
+    this.confirmPasswordResetResult = const HgfastResult.failure(
+      HgfastError.c1('WRITE_DISABLED'),
+    ),
+  });
 
   final List<Map<String, Object?>> contacts;
+  final HgfastResult<HgfastJson, HgfastError> requestPasswordResetResult;
+  final HgfastResult<HgfastJson, HgfastError> confirmPasswordResetResult;
 
   @override
   Future<HgfastResult<HgfastSession, HgfastError>> login({
@@ -224,5 +394,21 @@ final class _FakeRepository implements HgfastRepository {
     String? couponCode,
   }) async {
     return HgfastResult.success(HgfastOrderStatus({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> requestPasswordReset({
+    required String email,
+  }) async {
+    return requestPasswordResetResult;
+  }
+
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    return confirmPasswordResetResult;
   }
 }

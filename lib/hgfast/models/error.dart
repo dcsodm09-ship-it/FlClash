@@ -14,6 +14,8 @@ enum HgfastResource {
   aiChat,
   orderStatus,
   createOrder,
+  requestPasswordReset,
+  confirmPasswordReset,
 }
 
 sealed class HgfastError {

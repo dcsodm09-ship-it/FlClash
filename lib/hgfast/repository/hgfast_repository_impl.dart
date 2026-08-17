@@ -1332,4 +1332,55 @@ final class HgfastRepositoryImpl implements HgfastRepository {
       parse: (body) => HgfastOrderStatus(body),
     );
   }
+
+  // Real write path: POST /auth/reset/request. Unauthenticated by design —
+  // the whole point of password reset is recovering an account the caller
+  // cannot currently log into. `sealed: false` for the same reason
+  // createOrder() is unsealed today (an email address is not as sensitive
+  // as a password; this can be revisited alongside createOrder's `sealed`
+  // question once the write path actually opens). Currently gated
+  // (403/501) server-side — see repository.dart's doc comment.
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> requestPasswordReset({
+    required String email,
+  }) {
+    return _call<HgfastJson>(
+      method: 'POST',
+      pathname: '/auth/reset/request',
+      authed: false,
+      sealed: false,
+      resource: HgfastResource.requestPasswordReset,
+      jsonBody: <String, Object?>{'email': email},
+      parse: (body) => body,
+    );
+  }
+
+  // Real write path: POST /auth/reset/confirm. Unauthenticated, same reason
+  // as requestPasswordReset(). Unlike that method this carries a real new
+  // password — once the write path actually opens this should be revisited
+  // to seal the body the same way login's sealed_credentials protects the
+  // login password in transit (deliberately deferred, not forgotten: today
+  // the server returns the gated error before ever parsing the body, so
+  // there is nothing yet to protect, and doing HPKE sealing correctly is
+  // not something to rush alongside this contract-shell change).
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) {
+    return _call<HgfastJson>(
+      method: 'POST',
+      pathname: '/auth/reset/confirm',
+      authed: false,
+      sealed: false,
+      resource: HgfastResource.confirmPasswordReset,
+      jsonBody: <String, Object?>{
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      },
+      parse: (body) => body,
+    );
+  }
 }

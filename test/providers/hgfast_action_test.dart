@@ -114,6 +114,22 @@ class _FakeHgfastRepository implements HgfastRepository {
   }) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> requestPasswordReset({
+    required String email,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<HgfastResult<HgfastJson, HgfastError>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 void main() {
