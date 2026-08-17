@@ -182,7 +182,15 @@ class ApplicationState extends ConsumerState<Application> {
           home: child!,
         );
       },
-      child: const HomePage(),
+      child: Consumer(
+        builder: (_, ref, _) {
+          final isAuthenticated = ref.watch(isAuthenticatedProvider);
+          if (isAuthenticated == null) {
+            return const SizedBox.shrink();
+          }
+          return isAuthenticated ? const HomePage() : const AuthShell();
+        },
+      ),
     );
   }
 

@@ -19,6 +19,9 @@ import 'common/common.dart';
 import 'common/migration.dart';
 import 'database/database.dart';
 import 'enum/enum.dart';
+import 'hgfast/models/error.dart';
+import 'hgfast/models/node.dart';
+import 'hgfast/repository/repository.dart';
 import 'l10n/l10n.dart';
 import 'models/models.dart';
 import 'providers/providers.dart';
@@ -292,7 +295,42 @@ class GlobalState {
     if (res != true) {
       return;
     }
+    final isAllowed = await container.read(launchUrlGuardProvider)(url);
+    if (!isAllowed) {
+      return;
+    }
     launchUrl(Uri.parse(url));
+  }
+
+  void handleSessionExpired() {
+    navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    unawaited(container.read(authRepositoryProvider).logout());
+    container.read(isAuthenticatedProvider.notifier).value = false;
+  }
+
+  Future<void> _restoreAuthSession() async {
+    var isAuthenticated = false;
+    try {
+      final result = await container
+          .read(authRepositoryProvider)
+          .restoreSession()
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () => const HgfastResult.success(null),
+          );
+      isAuthenticated =
+          result is HgfastResultSuccess<HgfastSession?, HgfastError> &&
+          result.value != null;
+    } catch (e, s) {
+      commonPrint.log(
+        'restoreSession failed: $e, $s',
+        logLevel: LogLevel.warning,
+      );
+    }
+    if (container.read(isAuthenticatedProvider) == true) {
+      return;
+    }
+    container.read(isAuthenticatedProvider.notifier).value = isAuthenticated;
   }
 
   Future<void> attach() async {
@@ -312,6 +350,7 @@ class GlobalState {
         );
       });
     };
+    unawaited(_restoreAuthSession());
     container.read(systemActionProvider.notifier).updateTray();
     container.read(profilesActionProvider.notifier).autoUpdateProfiles();
     container.read(commonActionProvider.notifier).autoCheckUpdate();
@@ -411,6 +450,109 @@ class GlobalState {
     container
         .read(appSettingProvider.notifier)
         .update((state) => state.copyWith(disclaimerAccepted: true));
+  }
+}
+
+final isAuthenticatedProvider = NotifierProvider<AuthSessionNotifier, bool?>(
+  AuthSessionNotifier.new,
+);
+
+final class AuthSessionNotifier extends Notifier<bool?>
+    with AutoDisposeNotifierMixin<bool?> {
+  @override
+  bool? build() => null;
+}
+
+final authRepositoryProvider = Provider<HgfastRepository>(
+  (ref) => _StubHgfastRepository(),
+);
+
+final launchUrlGuardProvider = Provider<Future<bool> Function(String)>(
+  (ref) =>
+      (url) async => true,
+);
+
+final class _StubHgfastRepository implements HgfastRepository {
+  @override
+  Future<HgfastResult<HgfastSession, HgfastError>> login({
+    required String credential,
+    required String password,
+  }) async {
+    return const HgfastResult.failure(HgfastError.clientApiStateUnavailable());
+  }
+
+  @override
+  Future<HgfastResult<void, HgfastError>> logout() async {
+    return const HgfastResult.success(null);
+  }
+
+  @override
+  Future<HgfastResult<HgfastSession?, HgfastError>> restoreSession() async {
+    return const HgfastResult.success(null);
+  }
+
+  @override
+  Future<HgfastResult<HgfastBootstrap, HgfastError>> bootstrap() async {
+    return HgfastResult.success(
+      HgfastBootstrap({'fallback_contacts': const []}),
+    );
+  }
+
+  @override
+  Future<HgfastResult<HgfastConfig, HgfastError>> config() async {
+    return HgfastResult.success(HgfastConfig({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastAnnouncementCatalog, HgfastError>>
+  announcements() async {
+    return HgfastResult.success(HgfastAnnouncementCatalog({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastPlanCatalog, HgfastError>> plans() async {
+    return HgfastResult.success(HgfastPlanCatalog({}));
+  }
+
+  @override
+  Future<HgfastResult<NodeCatalog, HgfastError>> nodes() async {
+    return HgfastResult.success(NodeCatalog(automatic: true, groups: {}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastSubscription, HgfastError>> subscription() async {
+    return HgfastResult.success(HgfastSubscription({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastTraffic, HgfastError>> traffic() async {
+    return HgfastResult.success(HgfastTraffic({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastInvite, HgfastError>> invite() async {
+    return HgfastResult.success(HgfastInvite({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastLotteryStatus, HgfastError>> lotteryStatus() async {
+    return HgfastResult.success(HgfastLotteryStatus({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastAiResponse, HgfastError>> aiChat({
+    required String message,
+    String? model,
+    HgfastJson? context,
+  }) async {
+    return HgfastResult.success(HgfastAiResponse({}));
+  }
+
+  @override
+  Future<HgfastResult<HgfastOrderStatus, HgfastError>> orderStatus(
+    String orderId,
+  ) async {
+    return HgfastResult.success(HgfastOrderStatus({}));
   }
 }
 
