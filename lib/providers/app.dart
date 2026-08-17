@@ -277,6 +277,14 @@ class Query extends _$Query with AutoDisposeNotifierMixin {
   }
 }
 
+@riverpod
+class ConnectFilter extends _$ConnectFilter with AutoDisposeNotifierMixin {
+  @override
+  NodeTypeFilter build() {
+    return NodeTypeFilter.all;
+  }
+}
+
 @Riverpod(keepAlive: true)
 class Loading extends _$Loading with AutoDisposeNotifierMixin {
   DateTime? _start;

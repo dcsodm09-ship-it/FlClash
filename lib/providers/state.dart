@@ -3,6 +3,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'app.dart';
 import 'config.dart';
+import 'connect_fixture.dart';
 import 'database.dart';
 
 part 'generated/state.g.dart';
@@ -244,6 +246,62 @@ GroupsState filterGroupsState(Ref ref, String query) {
       .where((group) => group.all.isNotEmpty)
       .toList();
   return currentGroups.copyWith(value: groups);
+}
+
+int _byNodeSort(NodeSpec a, NodeSpec b) => a.sort.compareTo(b.sort);
+
+@riverpod
+NodeCatalog connectNodeCatalog(Ref ref) {
+  return connectFixtureNodeCatalog();
+}
+
+@riverpod
+List<NodeTypeFilter> connectAvailableFilters(Ref ref) {
+  final nodes = ref.watch(connectNodeCatalogProvider).nodes;
+  return [
+    NodeTypeFilter.all,
+    NodeTypeFilter.recommended,
+    if (nodes.any((node) => node.region.isNotEmpty)) NodeTypeFilter.regional,
+    if (nodes.any((node) => node.category == NodeCategory.vip))
+      NodeTypeFilter.vip,
+    if (nodes.any((node) => node.category == NodeCategory.dedicatedIp))
+      NodeTypeFilter.dedicatedIp,
+    if (nodes.any((node) => node.category == NodeCategory.residential))
+      NodeTypeFilter.residential,
+  ];
+}
+
+@riverpod
+ConnectNodesState filterConnectNodesState(Ref ref, NodeTypeFilter filter) {
+  final catalog = ref.watch(connectNodeCatalogProvider);
+  final availableFilters = ref.watch(connectAvailableFiltersProvider);
+  final selectedFilter = availableFilters.contains(filter)
+      ? filter
+      : NodeTypeFilter.all;
+  final nodes = catalog.nodes;
+  final filtered = switch (selectedFilter) {
+    NodeTypeFilter.all => nodes.toList(),
+    NodeTypeFilter.recommended => nodes.toList()..sort(_byNodeSort),
+    NodeTypeFilter.regional =>
+      nodes.where((node) => node.region.isNotEmpty).toList()..sort((a, b) {
+        final byRegion = a.region.compareTo(b.region);
+        return byRegion != 0 ? byRegion : a.sort.compareTo(b.sort);
+      }),
+    NodeTypeFilter.vip =>
+      nodes.where((node) => node.category == NodeCategory.vip).toList()
+        ..sort(_byNodeSort),
+    NodeTypeFilter.dedicatedIp =>
+      nodes.where((node) => node.category == NodeCategory.dedicatedIp).toList()
+        ..sort(_byNodeSort),
+    NodeTypeFilter.residential =>
+      nodes.where((node) => node.category == NodeCategory.residential).toList()
+        ..sort(_byNodeSort),
+  };
+  return ConnectNodesState(
+    nodes: filtered,
+    availableFilters: availableFilters,
+    selectedFilter: selectedFilter,
+  );
 }
 
 @riverpod

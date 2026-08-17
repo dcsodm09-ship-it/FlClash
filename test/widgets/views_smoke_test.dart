@@ -39,6 +39,7 @@ void main() {
     'resources': const ResourcesView(),
     'logs': const LogsView(),
     'tools': const ToolsView(),
+    'connect': const ConnectView(),
     'basic config': const ConfigView(),
     'dns config': const Scaffold(body: DnsListView()),
     'network config': const Scaffold(body: NetworkListView()),

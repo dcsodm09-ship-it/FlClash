@@ -1348,6 +1348,58 @@ abstract class _$Query extends $Notifier<String> {
   }
 }
 
+@ProviderFor(ConnectFilter)
+final connectFilterProvider = ConnectFilterProvider._();
+
+final class ConnectFilterProvider
+    extends $NotifierProvider<ConnectFilter, NodeTypeFilter> {
+  ConnectFilterProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'connectFilterProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectFilterHash();
+
+  @$internal
+  @override
+  ConnectFilter create() => ConnectFilter();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NodeTypeFilter value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NodeTypeFilter>(value),
+    );
+  }
+}
+
+String _$connectFilterHash() => r'51e702455db2469bc1493f821d4c1f383a6b8ec0';
+
+abstract class _$ConnectFilter extends $Notifier<NodeTypeFilter> {
+  NodeTypeFilter build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<NodeTypeFilter, NodeTypeFilter>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<NodeTypeFilter, NodeTypeFilter>,
+              NodeTypeFilter,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(Loading)
 final loadingProvider = LoadingFamily._();
 

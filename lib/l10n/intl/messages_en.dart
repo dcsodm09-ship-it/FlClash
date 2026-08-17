@@ -131,6 +131,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Provide diverse configuration options",
     ),
     "agree": MessageLookupByLibrary.simpleMessage("Agree"),
+    "all": MessageLookupByLibrary.simpleMessage("All"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Allow applications to bypass VPN",
     ),
@@ -299,6 +300,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Data Collection Notice",
     ),
     "daysAgo": m0,
+    "dedicatedIp": MessageLookupByLibrary.simpleMessage("Dedicated IP"),
     "defaultNameserver": MessageLookupByLibrary.simpleMessage(
       "Default nameserver",
     ),
@@ -611,6 +613,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noResolveHostname": MessageLookupByLibrary.simpleMessage(
       "No resolve hostname",
     ),
+    "nodes": MessageLookupByLibrary.simpleMessage("Nodes"),
     "none": MessageLookupByLibrary.simpleMessage("none"),
     "notSelectedTip": MessageLookupByLibrary.simpleMessage(
       "The current proxy group cannot be selected.",
@@ -748,8 +751,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "quickFill": MessageLookupByLibrary.simpleMessage("Quick fill"),
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("Rainbow"),
+    "recommended": MessageLookupByLibrary.simpleMessage("Recommended"),
+    "recommendedSort": MessageLookupByLibrary.simpleMessage(
+      "Recommended order",
+    ),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir Port"),
     "redo": MessageLookupByLibrary.simpleMessage("redo"),
+    "regional": MessageLookupByLibrary.simpleMessage("Regional"),
+    "regionalGrouped": MessageLookupByLibrary.simpleMessage(
+      "Grouped by region",
+    ),
     "remote": MessageLookupByLibrary.simpleMessage("Remote"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
       "Backup local data to WebDAV",
@@ -769,6 +780,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "The current page has changes. Are you sure you want to reset?",
     ),
     "resetTip": MessageLookupByLibrary.simpleMessage("Make sure to reset"),
+    "residential": MessageLookupByLibrary.simpleMessage("Residential"),
     "resources": MessageLookupByLibrary.simpleMessage("Resources"),
     "resourcesDesc": MessageLookupByLibrary.simpleMessage(
       "External resource related info",

@@ -338,6 +338,15 @@ enum PageLabel {
   docs,
 }
 
+enum NodeTypeFilter {
+  all,
+  recommended,
+  regional,
+  vip,
+  dedicatedIp,
+  residential,
+}
+
 enum RuleAction {
   DOMAIN('DOMAIN'),
   DOMAIN_SUFFIX('DOMAIN-SUFFIX'),

@@ -78,7 +78,7 @@ class Navigation {
         icon: const Icon(Icons.power_settings_new),
         label: PageLabel.connect,
         builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.connect)),
+            const ConnectView(key: GlobalObjectKey(PageLabel.connect)),
         path: '/connect',
         modes: enableHgfast
             ? [NavigationItemMode.mobile, NavigationItemMode.desktop]

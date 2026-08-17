@@ -130,6 +130,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Предоставляет разнообразные варианты конфигурации",
     ),
     "agree": MessageLookupByLibrary.simpleMessage("Согласен"),
+    "all": MessageLookupByLibrary.simpleMessage("Все"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Разрешить приложениям обходить VPN",
     ),
@@ -306,6 +307,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Уведомление о сборе данных",
     ),
     "daysAgo": m0,
+    "dedicatedIp": MessageLookupByLibrary.simpleMessage("Выделенный IP"),
     "defaultNameserver": MessageLookupByLibrary.simpleMessage(
       "Сервер имен по умолчанию",
     ),
@@ -638,6 +640,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noResolveHostname": MessageLookupByLibrary.simpleMessage(
       "Не разрешать имя хоста",
     ),
+    "nodes": MessageLookupByLibrary.simpleMessage("Узлы"),
     "none": MessageLookupByLibrary.simpleMessage("Нет"),
     "notSelectedTip": MessageLookupByLibrary.simpleMessage(
       "Текущая группа прокси не может быть выбрана.",
@@ -785,8 +788,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "quickFill": MessageLookupByLibrary.simpleMessage("Быстрое заполнение"),
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("Радужные"),
+    "recommended": MessageLookupByLibrary.simpleMessage("Рекомендуемые"),
+    "recommendedSort": MessageLookupByLibrary.simpleMessage(
+      "Рекомендуемый порядок",
+    ),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir-порт"),
     "redo": MessageLookupByLibrary.simpleMessage("Повторить"),
+    "regional": MessageLookupByLibrary.simpleMessage("По регионам"),
+    "regionalGrouped": MessageLookupByLibrary.simpleMessage(
+      "Сгруппировано по региону",
+    ),
     "remote": MessageLookupByLibrary.simpleMessage("Удаленный"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
       "Резервное копирование локальных данных на WebDAV",
@@ -808,6 +819,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "resetTip": MessageLookupByLibrary.simpleMessage(
       "Убедитесь, что хотите сбросить",
     ),
+    "residential": MessageLookupByLibrary.simpleMessage("Резидентный IP"),
     "resources": MessageLookupByLibrary.simpleMessage("Ресурсы"),
     "resourcesDesc": MessageLookupByLibrary.simpleMessage(
       "Информация, связанная с внешними ресурсами",

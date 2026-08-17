@@ -104,6 +104,61 @@ class AppLocalizations {
     return Intl.message('Docs', name: 'docs', desc: '', args: []);
   }
 
+  /// `All`
+  String get all {
+    return Intl.message('All', name: 'all', desc: '', args: []);
+  }
+
+  /// `Recommended`
+  String get recommended {
+    return Intl.message('Recommended', name: 'recommended', desc: '', args: []);
+  }
+
+  /// `Regional`
+  String get regional {
+    return Intl.message('Regional', name: 'regional', desc: '', args: []);
+  }
+
+  /// `Dedicated IP`
+  String get dedicatedIp {
+    return Intl.message(
+      'Dedicated IP',
+      name: 'dedicatedIp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Residential`
+  String get residential {
+    return Intl.message('Residential', name: 'residential', desc: '', args: []);
+  }
+
+  /// `Recommended order`
+  String get recommendedSort {
+    return Intl.message(
+      'Recommended order',
+      name: 'recommendedSort',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Nodes`
+  String get nodes {
+    return Intl.message('Nodes', name: 'nodes', desc: '', args: []);
+  }
+
+  /// `Grouped by region`
+  String get regionalGrouped {
+    return Intl.message(
+      'Grouped by region',
+      name: 'regionalGrouped',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Proxies`
   String get proxies {
     return Intl.message('Proxies', name: 'proxies', desc: '', args: []);

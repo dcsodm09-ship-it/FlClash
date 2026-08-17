@@ -109,6 +109,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "advancedConfig": MessageLookupByLibrary.simpleMessage("高度な設定"),
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage("多様な設定を提供"),
     "agree": MessageLookupByLibrary.simpleMessage("同意"),
+    "all": MessageLookupByLibrary.simpleMessage("すべて"),
     "allowBypass": MessageLookupByLibrary.simpleMessage("アプリがVPNをバイパスすることを許可"),
     "allowBypassDesc": MessageLookupByLibrary.simpleMessage(
       "有効化すると一部アプリがVPNをバイパス",
@@ -237,6 +238,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "dataCollectionTip": MessageLookupByLibrary.simpleMessage("データ収集説明"),
     "daysAgo": m0,
+    "dedicatedIp": MessageLookupByLibrary.simpleMessage("専用IP"),
     "defaultNameserver": MessageLookupByLibrary.simpleMessage("デフォルトネームサーバー"),
     "defaultNameserverDesc": MessageLookupByLibrary.simpleMessage(
       "DNSサーバーの解決用",
@@ -481,6 +483,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noRecords": MessageLookupByLibrary.simpleMessage("履歴なし"),
     "noResolve": MessageLookupByLibrary.simpleMessage("IPを解決しない"),
     "noResolveHostname": MessageLookupByLibrary.simpleMessage("ホスト名を解決しない"),
+    "nodes": MessageLookupByLibrary.simpleMessage("ノード"),
     "none": MessageLookupByLibrary.simpleMessage("なし"),
     "notSelectedTip": MessageLookupByLibrary.simpleMessage(
       "現在のプロキシグループは選択できません",
@@ -600,8 +603,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "qrcodeDesc": MessageLookupByLibrary.simpleMessage("QRコードをスキャンしてプロファイルを取得"),
     "quickFill": MessageLookupByLibrary.simpleMessage("クイック入力"),
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("レインボー"),
+    "recommended": MessageLookupByLibrary.simpleMessage("おすすめ"),
+    "recommendedSort": MessageLookupByLibrary.simpleMessage("おすすめ順"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redirポート"),
     "redo": MessageLookupByLibrary.simpleMessage("やり直す"),
+    "regional": MessageLookupByLibrary.simpleMessage("地域"),
+    "regionalGrouped": MessageLookupByLibrary.simpleMessage("地域ごとにグループ化"),
     "remote": MessageLookupByLibrary.simpleMessage("リモート"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
       "WebDAVにデータをバックアップ",
@@ -617,6 +624,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "現在のページに変更があります。リセットしてもよろしいですか？",
     ),
     "resetTip": MessageLookupByLibrary.simpleMessage("リセットを確定"),
+    "residential": MessageLookupByLibrary.simpleMessage("住宅IP"),
     "resources": MessageLookupByLibrary.simpleMessage("リソース"),
     "resourcesDesc": MessageLookupByLibrary.simpleMessage("外部リソース関連情報"),
     "respectRules": MessageLookupByLibrary.simpleMessage("ルール尊重"),

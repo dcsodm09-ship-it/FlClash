@@ -6268,6 +6268,281 @@ as List<Proxy>,
 }
 
 /// @nodoc
+mixin _$ConnectNodesState {
+
+ List<NodeSpec> get nodes; List<NodeTypeFilter> get availableFilters; NodeTypeFilter get selectedFilter;
+/// Create a copy of ConnectNodesState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ConnectNodesStateCopyWith<ConnectNodesState> get copyWith => _$ConnectNodesStateCopyWithImpl<ConnectNodesState>(this as ConnectNodesState, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConnectNodesState&&const DeepCollectionEquality().equals(other.nodes, nodes)&&const DeepCollectionEquality().equals(other.availableFilters, availableFilters)&&(identical(other.selectedFilter, selectedFilter) || other.selectedFilter == selectedFilter));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(nodes),const DeepCollectionEquality().hash(availableFilters),selectedFilter);
+
+@override
+String toString() {
+  return 'ConnectNodesState(nodes: $nodes, availableFilters: $availableFilters, selectedFilter: $selectedFilter)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ConnectNodesStateCopyWith<$Res>  {
+  factory $ConnectNodesStateCopyWith(ConnectNodesState value, $Res Function(ConnectNodesState) _then) = _$ConnectNodesStateCopyWithImpl;
+@useResult
+$Res call({
+ List<NodeSpec> nodes, List<NodeTypeFilter> availableFilters, NodeTypeFilter selectedFilter
+});
+
+
+
+
+}
+/// @nodoc
+class _$ConnectNodesStateCopyWithImpl<$Res>
+    implements $ConnectNodesStateCopyWith<$Res> {
+  _$ConnectNodesStateCopyWithImpl(this._self, this._then);
+
+  final ConnectNodesState _self;
+  final $Res Function(ConnectNodesState) _then;
+
+/// Create a copy of ConnectNodesState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? nodes = null,Object? availableFilters = null,Object? selectedFilter = null,}) {
+  return _then(_self.copyWith(
+nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
+as List<NodeSpec>,availableFilters: null == availableFilters ? _self.availableFilters : availableFilters // ignore: cast_nullable_to_non_nullable
+as List<NodeTypeFilter>,selectedFilter: null == selectedFilter ? _self.selectedFilter : selectedFilter // ignore: cast_nullable_to_non_nullable
+as NodeTypeFilter,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ConnectNodesState].
+extension ConnectNodesStatePatterns on ConnectNodesState {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ConnectNodesState value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ConnectNodesState() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ConnectNodesState value)  $default,){
+final _that = this;
+switch (_that) {
+case _ConnectNodesState():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ConnectNodesState value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ConnectNodesState() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ConnectNodesState() when $default != null:
+return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter)  $default,) {final _that = this;
+switch (_that) {
+case _ConnectNodesState():
+return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<NodeSpec> nodes,  List<NodeTypeFilter> availableFilters,  NodeTypeFilter selectedFilter)?  $default,) {final _that = this;
+switch (_that) {
+case _ConnectNodesState() when $default != null:
+return $default(_that.nodes,_that.availableFilters,_that.selectedFilter);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ConnectNodesState implements ConnectNodesState {
+  const _ConnectNodesState({required final  List<NodeSpec> nodes, required final  List<NodeTypeFilter> availableFilters, required this.selectedFilter}): _nodes = nodes,_availableFilters = availableFilters;
+  
+
+ final  List<NodeSpec> _nodes;
+@override List<NodeSpec> get nodes {
+  if (_nodes is EqualUnmodifiableListView) return _nodes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_nodes);
+}
+
+ final  List<NodeTypeFilter> _availableFilters;
+@override List<NodeTypeFilter> get availableFilters {
+  if (_availableFilters is EqualUnmodifiableListView) return _availableFilters;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_availableFilters);
+}
+
+@override final  NodeTypeFilter selectedFilter;
+
+/// Create a copy of ConnectNodesState
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ConnectNodesStateCopyWith<_ConnectNodesState> get copyWith => __$ConnectNodesStateCopyWithImpl<_ConnectNodesState>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConnectNodesState&&const DeepCollectionEquality().equals(other._nodes, _nodes)&&const DeepCollectionEquality().equals(other._availableFilters, _availableFilters)&&(identical(other.selectedFilter, selectedFilter) || other.selectedFilter == selectedFilter));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_nodes),const DeepCollectionEquality().hash(_availableFilters),selectedFilter);
+
+@override
+String toString() {
+  return 'ConnectNodesState(nodes: $nodes, availableFilters: $availableFilters, selectedFilter: $selectedFilter)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ConnectNodesStateCopyWith<$Res> implements $ConnectNodesStateCopyWith<$Res> {
+  factory _$ConnectNodesStateCopyWith(_ConnectNodesState value, $Res Function(_ConnectNodesState) _then) = __$ConnectNodesStateCopyWithImpl;
+@override @useResult
+$Res call({
+ List<NodeSpec> nodes, List<NodeTypeFilter> availableFilters, NodeTypeFilter selectedFilter
+});
+
+
+
+
+}
+/// @nodoc
+class __$ConnectNodesStateCopyWithImpl<$Res>
+    implements _$ConnectNodesStateCopyWith<$Res> {
+  __$ConnectNodesStateCopyWithImpl(this._self, this._then);
+
+  final _ConnectNodesState _self;
+  final $Res Function(_ConnectNodesState) _then;
+
+/// Create a copy of ConnectNodesState
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? nodes = null,Object? availableFilters = null,Object? selectedFilter = null,}) {
+  return _then(_ConnectNodesState(
+nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
+as List<NodeSpec>,availableFilters: null == availableFilters ? _self._availableFilters : availableFilters // ignore: cast_nullable_to_non_nullable
+as List<NodeTypeFilter>,selectedFilter: null == selectedFilter ? _self.selectedFilter : selectedFilter // ignore: cast_nullable_to_non_nullable
+as NodeTypeFilter,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$MoreToolsSelectorState {
 
  List<NavigationItem> get navigationItems;

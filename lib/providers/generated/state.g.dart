@@ -602,6 +602,181 @@ final class FilterGroupsStateFamily extends $Family
   String toString() => r'filterGroupsStateProvider';
 }
 
+@ProviderFor(connectNodeCatalog)
+final connectNodeCatalogProvider = ConnectNodeCatalogProvider._();
+
+final class ConnectNodeCatalogProvider
+    extends $FunctionalProvider<NodeCatalog, NodeCatalog, NodeCatalog>
+    with $Provider<NodeCatalog> {
+  ConnectNodeCatalogProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'connectNodeCatalogProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectNodeCatalogHash();
+
+  @$internal
+  @override
+  $ProviderElement<NodeCatalog> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  NodeCatalog create(Ref ref) {
+    return connectNodeCatalog(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NodeCatalog value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NodeCatalog>(value),
+    );
+  }
+}
+
+String _$connectNodeCatalogHash() =>
+    r'c835b38a7649b316bdb66ffae271823bb2bacd92';
+
+@ProviderFor(connectAvailableFilters)
+final connectAvailableFiltersProvider = ConnectAvailableFiltersProvider._();
+
+final class ConnectAvailableFiltersProvider
+    extends
+        $FunctionalProvider<
+          List<NodeTypeFilter>,
+          List<NodeTypeFilter>,
+          List<NodeTypeFilter>
+        >
+    with $Provider<List<NodeTypeFilter>> {
+  ConnectAvailableFiltersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'connectAvailableFiltersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectAvailableFiltersHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<NodeTypeFilter>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<NodeTypeFilter> create(Ref ref) {
+    return connectAvailableFilters(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<NodeTypeFilter> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<NodeTypeFilter>>(value),
+    );
+  }
+}
+
+String _$connectAvailableFiltersHash() =>
+    r'f7e495454aa3cef4b7372830c0131f262c3efaaf';
+
+@ProviderFor(filterConnectNodesState)
+final filterConnectNodesStateProvider = FilterConnectNodesStateFamily._();
+
+final class FilterConnectNodesStateProvider
+    extends
+        $FunctionalProvider<
+          ConnectNodesState,
+          ConnectNodesState,
+          ConnectNodesState
+        >
+    with $Provider<ConnectNodesState> {
+  FilterConnectNodesStateProvider._({
+    required FilterConnectNodesStateFamily super.from,
+    required NodeTypeFilter super.argument,
+  }) : super(
+         retry: null,
+         name: r'filterConnectNodesStateProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$filterConnectNodesStateHash();
+
+  @override
+  String toString() {
+    return r'filterConnectNodesStateProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<ConnectNodesState> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ConnectNodesState create(Ref ref) {
+    final argument = this.argument as NodeTypeFilter;
+    return filterConnectNodesState(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ConnectNodesState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ConnectNodesState>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is FilterConnectNodesStateProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$filterConnectNodesStateHash() =>
+    r'2716847b982fa07bbb337ba6fafcd7628a9cf2a7';
+
+final class FilterConnectNodesStateFamily extends $Family
+    with $FunctionalFamilyOverride<ConnectNodesState, NodeTypeFilter> {
+  FilterConnectNodesStateFamily._()
+    : super(
+        retry: null,
+        name: r'filterConnectNodesStateProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  FilterConnectNodesStateProvider call(NodeTypeFilter filter) =>
+      FilterConnectNodesStateProvider._(argument: filter, from: this);
+
+  @override
+  String toString() => r'filterConnectNodesStateProvider';
+}
+
 @ProviderFor(proxiesListState)
 final proxiesListStateProvider = ProxiesListStateProvider._();
 
