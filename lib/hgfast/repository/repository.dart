@@ -110,4 +110,16 @@ abstract interface class HgfastRepository {
   });
 
   Future<HgfastResult<HgfastOrderStatus, HgfastError>> orderStatus(String orderId);
+
+  // Real write path: POST /order. Server-side this is currently permanently
+  // gated (403 WRITE_DISABLED, or 501 WRITE_NOT_IMPLEMENTED once the write
+  // gate itself is on) until it is routed through the panel's authed
+  // req.user order/save flow — see v2board-adapter.js's `orderCreateSpec()`.
+  // This method still performs the real signed call; it is expected to fail
+  // against the live backend today, callers must handle that honestly.
+  Future<HgfastResult<HgfastOrderStatus, HgfastError>> createOrder({
+    required String planId,
+    required String period,
+    String? couponCode,
+  });
 }

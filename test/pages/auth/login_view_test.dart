@@ -266,4 +266,13 @@ final class _FakeRepository implements HgfastRepository {
   ) async {
     return HgfastResult.success(HgfastOrderStatus({}));
   }
+
+  @override
+  Future<HgfastResult<HgfastOrderStatus, HgfastError>> createOrder({
+    required String planId,
+    required String period,
+    String? couponCode,
+  }) async {
+    return HgfastResult.success(HgfastOrderStatus({}));
+  }
 }

@@ -105,6 +105,15 @@ class _FakeHgfastRepository implements HgfastRepository {
   ) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<HgfastResult<HgfastOrderStatus, HgfastError>> createOrder({
+    required String planId,
+    required String period,
+    String? couponCode,
+  }) {
+    throw UnimplementedError();
+  }
 }
 
 void main() {

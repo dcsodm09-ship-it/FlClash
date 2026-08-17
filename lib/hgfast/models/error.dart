@@ -13,6 +13,7 @@ enum HgfastResource {
   lotteryStatus,
   aiChat,
   orderStatus,
+  createOrder,
 }
 
 sealed class HgfastError {

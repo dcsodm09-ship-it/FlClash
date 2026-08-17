@@ -2,6 +2,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/discover/discover_view.dart';
 import 'package:fl_clash/pages/invite/invite_view.dart';
+import 'package:fl_clash/pages/plans/plans_view.dart';
 import 'package:fl_clash/pages/support/support_view.dart';
 import 'package:fl_clash/views/views.dart';
 import 'package:flutter/material.dart';
@@ -152,7 +153,7 @@ class Navigation {
         icon: const Icon(Icons.payments),
         label: PageLabel.plans,
         builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.plans)),
+            const PlansView(key: GlobalObjectKey(PageLabel.plans)),
         path: '/plans',
         modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),

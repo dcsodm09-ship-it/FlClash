@@ -1295,4 +1295,33 @@ final class HgfastRepositoryImpl implements HgfastRepository {
       parse: (body) => HgfastOrderStatus(body),
     );
   }
+
+  // Real write path: POST /order — see repository.dart's doc comment on
+  // this method for why this is expected to fail (403/501) against the
+  // live backend today. Field names (`plan_id`, `period`, `action`,
+  // `coupon_code`) match v2board-adapter.js's `orderCreateSpec()` exactly;
+  // `period` is the client-facing key (`month`/`quarter`/`half_year`/
+  // `year`/`onetime`, same keys as `/plans`' `prices_cents`), not the
+  // internal v2board column name — the server maps that itself.
+  @override
+  Future<HgfastResult<HgfastOrderStatus, HgfastError>> createOrder({
+    required String planId,
+    required String period,
+    String? couponCode,
+  }) {
+    return _call<HgfastOrderStatus>(
+      method: 'POST',
+      pathname: '/order',
+      authed: true,
+      sealed: false,
+      resource: HgfastResource.createOrder,
+      jsonBody: <String, Object?>{
+        'plan_id': planId,
+        'period': period,
+        'action': 'purchase',
+        'coupon_code': ?couponCode,
+      },
+      parse: (body) => HgfastOrderStatus(body),
+    );
+  }
 }

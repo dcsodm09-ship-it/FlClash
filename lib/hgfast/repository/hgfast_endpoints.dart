@@ -2,7 +2,8 @@ import 'package:fl_clash/common/common.dart';
 
 enum HgfastPlatformSegment {
   android('android'),
-  windows('win');
+  windows('win'),
+  macos('macos');
 
   const HgfastPlatformSegment(this.pathSegment);
 
@@ -15,6 +16,9 @@ HgfastPlatformSegment? resolveHgfastPlatformSegment() {
   }
   if (system.isWindows) {
     return HgfastPlatformSegment.windows;
+  }
+  if (system.isMacOS) {
+    return HgfastPlatformSegment.macos;
   }
   return null;
 }
