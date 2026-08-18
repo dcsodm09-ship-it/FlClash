@@ -56,9 +56,34 @@ class _LoginViewState extends ConsumerState<LoginView> {
       _isSubmitting = true;
       _errorMessage = null;
     });
-    final loggedIn = await ref
-        .read(hgfastAuthActionProvider.notifier)
-        .login(credential: credential, password: password);
+    final bool loggedIn;
+    try {
+      loggedIn = await ref
+          .read(hgfastAuthActionProvider.notifier)
+          .login(credential: credential, password: password);
+    } on Object catch (error) {
+      // Defensive backstop, not the primary fix: everything this call
+      // chain reaches (HPKE seal, secure-storage device-identity mint,
+      // network) is already supposed to convert its own failures into an
+      // HgfastError instead of throwing (see hgfast_repository_impl.dart's
+      // _deviceIdentity() call-site guards for a real example of a gap
+      // that used to violate this and left this exact button stuck
+      // spinning forever with _isSubmitting never reset). If something
+      // still slips through uncaught, fail the same way any other login
+      // failure does rather than hanging.
+      commonPrint.log(
+        'login threw: ${error.runtimeType}',
+        logLevel: LogLevel.warning,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = '登录失败，请稍后再试';
+      });
+      return;
+    }
     if (!mounted) {
       return;
     }

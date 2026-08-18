@@ -95,6 +95,49 @@ void main() {
     expect(container.read(isAuthenticatedProvider), isFalse);
   });
 
+  testWidgets(
+    'an uncaught exception from login() resets the button instead of '
+    'leaving it stuck spinning forever (regression: this is exactly the '
+    'shape of the real macOS Keychain -34018/PlatformException that once '
+    'propagated uncaught through the whole login() call chain)',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          hgfastRepositoryProvider.overrideWithValue(
+            _FakeRepository(succeed: false, throwOnLogin: true),
+          ),
+          hgfastSyncActionProvider.overrideWith(() => _NoopSyncAction()),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: LoginView()),
+        ),
+      );
+      await tester.pump();
+
+      await tester.enterText(
+        find.byType(TextField).first,
+        'user@example.com',
+      );
+      await tester.enterText(find.byType(TextField).last, 'password');
+      await tester.tap(find.widgetWithText(FilledButton, '登录'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('登录失败，请稍后再试'), findsOneWidget);
+      // The button must be re-enabled (not stuck showing the spinner) —
+      // find it by its restored text label, which only renders when
+      // _isSubmitting is false.
+      expect(find.widgetWithText(FilledButton, '登录'), findsOneWidget);
+      expect(container.read(isAuthenticatedProvider), isFalse);
+    },
+  );
+
   testWidgets('register entry pushes RegisterView on the root navigator', (
     tester,
   ) async {
@@ -176,15 +219,24 @@ final class _NoopSyncAction extends HgfastSyncAction {
 }
 
 final class _FakeRepository implements HgfastRepository {
-  _FakeRepository({required this.succeed});
+  _FakeRepository({required this.succeed, this.throwOnLogin = false});
 
   final bool succeed;
+  final bool throwOnLogin;
 
   @override
   Future<HgfastResult<HgfastSession, HgfastError>> login({
     required String credential,
     required String password,
   }) async {
+    if (throwOnLogin) {
+      // Simulates an exception slipping past every layer that's supposed
+      // to convert it into an HgfastResult.failure first (HPKE seal,
+      // secure-storage device-identity mint, network) — the real-world
+      // trigger was flutter_secure_storage.write() throwing
+      // PlatformException uncaught, five call sites deep.
+      throw StateError('simulated uncaught failure below the repository');
+    }
     if (succeed) {
       return HgfastResult.success(HgfastSession({}));
     }
