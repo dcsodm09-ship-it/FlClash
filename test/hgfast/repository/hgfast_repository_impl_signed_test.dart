@@ -208,6 +208,56 @@ Future<HgfastRepositoryImpl> _buildSignedRepository(
 }
 
 void main() {
+  group('isPrekeyExpired', () {
+    // Regression coverage for the production outage: `valid_to_epoch` is a
+    // root-key-generation counter (same space as cert valid_from/to_epoch),
+    // not Unix wall-clock seconds. The real live value that broke every
+    // platform's login was exactly this shape: a small counter (4) that a
+    // wall-clock comparison against ~1.7 billion would always call expired.
+    test(
+      'a real prod-shaped prekey (small counter, current rootEpoch=1) is '
+      'not expired',
+      () {
+        expect(isPrekeyExpired(4, 1), isFalse);
+      },
+    );
+
+    test('a prekey minted at exactly the current root epoch is not expired', () {
+      expect(isPrekeyExpired(1, 1), isFalse);
+    });
+
+    test(
+      'a prekey whose valid_to_epoch is below the current root epoch is '
+      'expired',
+      () {
+        expect(isPrekeyExpired(1, 5), isTrue);
+      },
+    );
+
+    test(
+      'a wall-clock-shaped value (~1.7 billion) is NOT treated as expired '
+      'merely for being large — this is the exact bug: a value like this '
+      'used to make every real (small-counter) prekey look expired, not '
+      'the other way around, but the fix must not have overcorrected into '
+      'rejecting a large value outright either',
+      () {
+        expect(isPrekeyExpired(1700000000, 1), isFalse);
+      },
+    );
+
+    test(
+      'a non-int valid_to_epoch is NOT treated as expired by this '
+      'function alone — matches the existing `is int &&` short-circuit, '
+      'pre-existing behavior this fix does not change. (Whether a missing/'
+      'malformed valid_to_epoch should instead fail closed is a separate, '
+      'pre-existing question, out of scope for this regression fix.)',
+      () {
+        expect(isPrekeyExpired('4', 1), isFalse);
+        expect(isPrekeyExpired(null, 1), isFalse);
+      },
+    );
+  });
+
   test(
     'bootstrap() verifies a genuinely signed+HPKE-sealed response from the '
     'real backend crypto libraries and extracts the server prekey',

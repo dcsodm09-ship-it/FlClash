@@ -53,6 +53,29 @@ final class _HgfastMappedError implements Exception {
 
 const Object _autoDetectPlatformSegment = Object();
 
+// `server_static_prekey.valid_to_epoch` (from GET /config/bootstrap) is a
+// root-key-generation counter — the same small monotonic space cert
+// validity windows use (see hgfast/transport/signing.dart's verifyCert:
+// `rootEpoch < validFrom || rootEpoch > validTo`) — NOT Unix wall-clock
+// seconds. A prior version of the prekey-freshness check in _bootstrap()
+// compared it against wall-clock time instead, internally inconsistent
+// with how this same client verifies cert epochs a few lines away
+// (bConfigCert/cResponseCert, both checked against rootEpoch). That made
+// every real prekey — minted with a small counter value, e.g. "valid
+// through root epoch 4" — look permanently "expired" against a
+// ~1.7-billion-second wall clock, so _ensurePrekey() could never cache
+// one and every login failed with "bootstrap prekey unavailable" (first
+// reported live as macOS login spinning, then reproduced identically on
+// Android — this was a production-wide outage across every platform, not
+// a macOS-specific bug). Root epoch only bumps on deliberate root-key
+// rotation, so this is the same low-frequency "epoch" this file already
+// uses everywhere else for cert validity. Pulled out as a top-level
+// function so the exact bug (a mismatched semantics regression) has a
+// direct unit test, not just fixture-level coverage.
+bool isPrekeyExpired(Object? validToEpoch, int rootEpoch) {
+  return validToEpoch is int && validToEpoch < rootEpoch;
+}
+
 String _defaultGenerateNonce() {
   final random = Random.secure();
   final bytes = Uint8List.fromList(
@@ -742,8 +765,7 @@ final class HgfastRepositoryImpl implements HgfastRepository {
       final prekeyId = prekeyMap['prekey_id'];
       final prekeyPubB64 = prekeyMap['prekey_pub'];
       final validToEpoch = prekeyMap['valid_to_epoch'];
-      final localNowEpoch = _clockNowSeconds() + _clockOffsetSeconds;
-      final isExpired = validToEpoch is int && validToEpoch < localNowEpoch;
+      final isExpired = isPrekeyExpired(validToEpoch, _rootEpoch);
       if (prekeyId is String && prekeyPubB64 is String && !isExpired) {
         try {
           _cachedPrekeyId = prekeyId;
