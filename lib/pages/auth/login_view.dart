@@ -136,7 +136,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Center(child: HgfastBrandMark()),
+                  const Center(child: HgfastAppBrandHeader()),
                   const SizedBox(height: HgfastSpacing.lg),
                   Text(
                     '连接更快，一点即达',

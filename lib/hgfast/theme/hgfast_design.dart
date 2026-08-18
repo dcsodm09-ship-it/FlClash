@@ -7,7 +7,44 @@
 //
 // Kept dependency-light on purpose: pure Flutter, no new pub packages.
 
+import 'package:fl_clash/common/scroll.dart';
+import 'package:fl_clash/widgets/scroll.dart';
 import 'package:flutter/material.dart';
+
+/// Keeps the app-wide desktop scrollbar's real behavior (CommonScrollBar,
+/// already `interactive: true`) but forces its thumb persistently visible
+/// on HGFAST screens instead of only flashing in during an active scroll —
+/// on a screen this short, a thumb that's only visible mid-drag reads as a
+/// rendering glitch rather than a control the user can reach for. Same
+/// widget, same drag behavior, just always shown.
+class _HgfastScrollBehavior extends BaseScrollBehavior {
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    switch (axisDirectionToAxis(details.direction)) {
+      case Axis.horizontal:
+        return child;
+      case Axis.vertical:
+        switch (getPlatform(context)) {
+          case TargetPlatform.linux:
+          case TargetPlatform.macOS:
+          case TargetPlatform.windows:
+            return CommonScrollBar(
+              controller: details.controller,
+              thumbVisibility: true,
+              child: child,
+            );
+          case TargetPlatform.android:
+          case TargetPlatform.fuchsia:
+          case TargetPlatform.iOS:
+            return child;
+        }
+    }
+  }
+}
 
 /// Raw color tokens. Prefer [HgfastAuthScope] + `Theme.of(context).colorScheme`
 /// in widget code over reaching for these directly — the scope maps them
@@ -178,12 +215,40 @@ class HgfastAuthScope extends StatelessWidget {
           borderSide: BorderSide(color: colorScheme.error),
         ),
       ),
+      // The desktop scrollbar on this screen (macOS/Windows/Linux) comes
+      // from the app-wide BaseScrollBehavior (application.dart), which
+      // wraps every vertical Scrollable in CommonScrollBar
+      // (lib/common/scroll.dart) — already `interactive: true`, so
+      // drag-to-scroll already worked; it just rendered as the theme's
+      // default plain grey, which on this screen's dark background reads
+      // as a stray static line rather than an obviously grabbable
+      // control. CommonScrollBar sets thickness/radius/interactive/
+      // thumbVisibility explicitly (those don't come from ThemeData), but
+      // leaves thumbColor unset, so branding it here is what actually
+      // takes effect — a plain color swap, not new interaction logic.
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.dragged)) {
+            return colorScheme.primary.withValues(alpha: 0.9);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return colorScheme.primary.withValues(alpha: 0.7);
+          }
+          return colorScheme.primary.withValues(alpha: 0.45);
+        }),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Theme(data: _buildTheme(Theme.of(context)), child: child);
+    return Theme(
+      data: _buildTheme(Theme.of(context)),
+      child: ScrollConfiguration(
+        behavior: _HgfastScrollBehavior(),
+        child: child,
+      ),
+    );
   }
 }
 
@@ -328,6 +393,62 @@ class HgfastTextField extends StatelessWidget {
         ),
         suffixIcon: suffixIcon,
       ),
+    );
+  }
+}
+
+/// Real app logo (assets/images/icon.png, already the registered app-icon
+/// source — see pubspec.yaml's `assets/images/` entry) + a bold "HGFAST"
+/// wordmark, for the primary login entry point. [HgfastBrandMark] (an
+/// abstract icon-in-a-gradient-square) stays as-is for secondary auth
+/// screens (register/forgot-password) that don't need full brand
+/// treatment — this is deliberately the one place that carries the actual
+/// logo image and the app name together, matching how a real product's
+/// login/splash screen identifies itself before asking for credentials.
+class HgfastAppBrandHeader extends StatelessWidget {
+  final double logoSize;
+
+  const HgfastAppBrandHeader({super.key, this.logoSize = 64});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: logoSize,
+          height: logoSize,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(HgfastRadii.brandMark),
+            boxShadow: [
+              BoxShadow(
+                color: HgfastColors.violet.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Image.asset(
+            'assets/images/icon.png',
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(height: HgfastSpacing.sm),
+        ShaderMask(
+          shaderCallback: (bounds) =>
+              HgfastGradients.brand.createShader(bounds),
+          child: const Text(
+            'HGFAST',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
+import 'package:fl_clash/hgfast/theme/hgfast_design.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/pages/auth/forgot_password_view.dart';
 import 'package:fl_clash/pages/auth/login_view.dart';
@@ -13,6 +14,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('shows the real app logo image and the HGFAST wordmark', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    globalState.container = container;
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const _TestApp(child: LoginView()),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), null);
+    expect(find.byType(HgfastAppBrandHeader), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(HgfastAppBrandHeader),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Image && widget.image is AssetImage,
+        ),
+      ),
+      findsOneWidget,
+      reason: 'must be the real app icon asset, not a placeholder icon glyph',
+    );
+    expect(find.text('HGFAST'), findsOneWidget);
+  });
+
   testWidgets('shows a validation message when fields are empty', (
     tester,
   ) async {
