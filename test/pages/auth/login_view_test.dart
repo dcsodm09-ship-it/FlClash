@@ -14,35 +14,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('shows the real app logo image and the HGFAST wordmark', (
-    tester,
-  ) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    globalState.container = container;
+  testWidgets(
+    'shows the HGFAST brand mark (not the unrelated upstream FlClash app '
+    'icon) and the HGFAST wordmark',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      globalState.container = container;
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const _TestApp(child: LoginView()),
-      ),
-    );
-    await tester.pump();
-
-    expect(tester.takeException(), null);
-    expect(find.byType(HgfastAppBrandHeader), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(HgfastAppBrandHeader),
-        matching: find.byWidgetPredicate(
-          (widget) => widget is Image && widget.image is AssetImage,
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: LoginView()),
         ),
-      ),
-      findsOneWidget,
-      reason: 'must be the real app icon asset, not a placeholder icon glyph',
-    );
-    expect(find.text('HGFAST'), findsOneWidget);
-  });
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), null);
+      expect(find.byType(HgfastAppBrandHeader), findsOneWidget);
+      // Regression guard: this screen must never render
+      // assets/images/icon.png (the upstream FlClash app icon, not an
+      // HGFAST asset — see HgfastAppBrandHeader's doc comment) as if it
+      // were HGFAST's own logo.
+      expect(
+        find.descendant(
+          of: find.byType(HgfastAppBrandHeader),
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Image && widget.image is AssetImage,
+          ),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(HgfastAppBrandHeader),
+          matching: find.byType(HgfastBrandMark),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('HGFAST'), findsOneWidget);
+    },
+  );
 
   testWidgets('shows a validation message when fields are empty', (
     tester,

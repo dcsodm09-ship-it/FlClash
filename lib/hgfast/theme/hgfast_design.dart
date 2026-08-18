@@ -397,14 +397,14 @@ class HgfastTextField extends StatelessWidget {
   }
 }
 
-/// Real app logo (assets/images/icon.png, already the registered app-icon
-/// source — see pubspec.yaml's `assets/images/` entry) + a bold "HGFAST"
-/// wordmark, for the primary login entry point. [HgfastBrandMark] (an
-/// abstract icon-in-a-gradient-square) stays as-is for secondary auth
-/// screens (register/forgot-password) that don't need full brand
-/// treatment — this is deliberately the one place that carries the actual
-/// logo image and the app name together, matching how a real product's
-/// login/splash screen identifies itself before asking for credentials.
+/// Larger [HgfastBrandMark] + a bold "HGFAST" wordmark, for the primary
+/// login entry point — the one place that carries the app's logo mark and
+/// name together as a real product identity, matching how a real app's
+/// login/splash screen introduces itself before asking for credentials.
+/// [HgfastBrandMark] itself stays in use at its smaller default size on
+/// secondary auth screens (register/forgot-password) that don't need full
+/// brand treatment. See the doc comment inside build() for why this
+/// deliberately does NOT use assets/images/icon.png.
 class HgfastAppBrandHeader extends StatelessWidget {
   final double logoSize;
 
@@ -413,27 +413,21 @@ class HgfastAppBrandHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: logoSize,
-          height: logoSize,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(HgfastRadii.brandMark),
-            boxShadow: [
-              BoxShadow(
-                color: HgfastColors.violet.withValues(alpha: 0.35),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Image.asset(
-            'assets/images/icon.png',
-            fit: BoxFit.contain,
-          ),
-        ),
+        // Deliberately NOT assets/images/icon.png: that file is the
+        // upstream FlClash app icon (unrelated third-party project this
+        // was forked from, last touched by an upstream commit, never
+        // re-themed for HGFAST) — there is no actual HGFAST logo asset
+        // anywhere in this repo yet. Using it here would put a different
+        // product's brand mark front-and-center on HGFAST's own login
+        // screen, directly under a "HGFAST" wordmark. HgfastBrandMark's
+        // abstract gradient-square-with-icon treatment IS genuinely
+        // HGFAST's own design language (already used consistently across
+        // every auth screen this whole redesign), so it's reused here at
+        // a larger size instead, as the real logo mark, until an actual
+        // commissioned/approved HGFAST logo image exists to swap in.
+        HgfastBrandMark(size: logoSize, icon: Icons.bolt_rounded),
         const SizedBox(height: HgfastSpacing.sm),
         ShaderMask(
           shaderCallback: (bounds) =>
