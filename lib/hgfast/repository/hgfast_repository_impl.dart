@@ -195,7 +195,16 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     final fullPath = '/api/client/${segment.pathSegment}/v1/auth/login';
     final nonce = _generateNonce();
     final timestamp = _currentTimestamp();
-    final deviceId = (await _deviceIdentity()).deviceId;
+    final String deviceId;
+    try {
+      deviceId = (await _deviceIdentity()).deviceId;
+    } on Object catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'device identity unavailable: ${error.runtimeType}',
+        ),
+      );
+    }
 
     final loginEphemeralKeyPair = await _ephemeralKeyPairGenerator();
     final loginEphemeralPublicKey = await loginEphemeralKeyPair
@@ -574,7 +583,16 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     final fullPath = '/api/client/${segment.pathSegment}/v1/config/bootstrap';
     final nonce = _generateNonce();
     final timestamp = _currentTimestamp();
-    final deviceId = (await _deviceIdentity()).deviceId;
+    final String deviceId;
+    try {
+      deviceId = (await _deviceIdentity()).deviceId;
+    } on Object catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'device identity unavailable: ${error.runtimeType}',
+        ),
+      );
+    }
 
     final ephemeralKeyPair = await _ephemeralKeyPairGenerator();
     final ephemeralPublicKey = await ephemeralKeyPair.extractPublicKey();
@@ -908,7 +926,12 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     final fullPath = '/api/client/${segment.pathSegment}/v1/time';
     final nonce = _generateNonce();
     final timestamp = _currentTimestamp();
-    final deviceId = (await _deviceIdentity()).deviceId;
+    final String deviceId;
+    try {
+      deviceId = (await _deviceIdentity()).deviceId;
+    } on Object {
+      return false;
+    }
     final headers = reqsign.buildRequestHeaders(
       method: 'GET',
       pathname: fullPath,
@@ -979,6 +1002,20 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     return (_clockNowSeconds() + _clockOffsetSeconds).toString();
   }
 
+  // This can throw — HgfastDeviceIdentityStore.loadOrCreate() has no
+  // internal try/catch around its flutter_secure_storage read/write calls,
+  // and platform secure-storage backends genuinely fail in the field (seen
+  // live: macOS Keychain writes raising PlatformException(-34018, "A
+  // required entitlement is not present.") on an ad-hoc-signed local build,
+  // surfaced as an *Unhandled Exception* all the way up through _login()/
+  // _bootstrap()/_call()/_resyncClock()/_confirmPasswordReset() to the
+  // calling view). Every one of those five call sites wraps this call in
+  // its own try/catch for exactly that reason — do not call this directly
+  // without one, or a storage failure will propagate as an uncaught
+  // exception and leave a view's loading flag (e.g. _isSubmitting) stuck
+  // true forever, the same class of bug the forgot-password control-
+  // character fix (see confirmPasswordReset's history) closed for a
+  // different trigger.
   Future<HgfastDeviceIdentity> _deviceIdentity() async {
     final cached = _deviceIdentityCache;
     if (cached != null) {
@@ -1044,7 +1081,16 @@ final class HgfastRepositoryImpl implements HgfastRepository {
     final bodyBytes = bodyJson == null ? const <int>[] : utf8.encode(bodyJson);
     final nonce = _generateNonce();
     final timestamp = _currentTimestamp();
-    final deviceId = (await _deviceIdentity()).deviceId;
+    final String deviceId;
+    try {
+      deviceId = (await _deviceIdentity()).deviceId;
+    } on Object catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'device identity unavailable: ${error.runtimeType}',
+        ),
+      );
+    }
     final token = session?.token ?? '';
     final headers = reqsign.buildRequestHeaders(
       method: method,
@@ -1450,7 +1496,16 @@ final class HgfastRepositoryImpl implements HgfastRepository {
         '/api/client/${segment.pathSegment}/v1/auth/reset/confirm';
     final nonce = _generateNonce();
     final timestamp = _currentTimestamp();
-    final deviceId = (await _deviceIdentity()).deviceId;
+    final String deviceId;
+    try {
+      deviceId = (await _deviceIdentity()).deviceId;
+    } on Object catch (error) {
+      return HgfastResult.failure(
+        HgfastError.clientApiStateUnavailable(
+          message: 'device identity unavailable: ${error.runtimeType}',
+        ),
+      );
+    }
 
     // No separate client_eph_pub field is needed here the way login sends
     // one: hpkeSealBase embeds its own single-use sender ephemeral pubkey
