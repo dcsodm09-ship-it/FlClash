@@ -349,7 +349,7 @@ class _HgfastAuthWindowChrome extends StatelessWidget {
               onDoubleTap: _toggleMaximize,
               child: Container(
                 width: double.infinity,
-                height: kHeaderHeight,
+                height: _macTrafficLightStripHeight,
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(
                   left: _macTrafficLightClearance,
@@ -396,6 +396,18 @@ class _HgfastAuthWindowChrome extends StatelessWidget {
 /// up for real-world macOS traffic-light spacing, which varies slightly
 /// by OS version.
 const double _macTrafficLightClearance = 78;
+
+/// Height of the macOS drag strip. NOT kHeaderHeight (28) — the app
+/// already has a real, separately-tuned reference for how much vertical
+/// room the native traffic-light cluster actually needs on macOS:
+/// AppSidebarContainer's own `if (system.isMacOS) SizedBox(height: 22)` +
+/// `SizedBox(height: 10)` (lib/manager/app_manager.dart) reserves 32px
+/// above its nav rail for exactly this same purpose. A user report that
+/// this strip looked wrong specifically in the traffic-light/drag area
+/// (not the label text) matches kHeaderHeight's 28px being 4px short of
+/// that established 32px precedent — matched here instead of guessing at
+/// a new number.
+const double _macTrafficLightStripHeight = 32;
 
 /// Small rounded-square gradient brand/icon mark shown above auth headlines.
 class HgfastBrandMark extends StatelessWidget {
