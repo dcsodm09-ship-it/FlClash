@@ -30,13 +30,26 @@ const Set<String> _gatedResetErrorCodes = {
 };
 
 class ForgotPasswordView extends ConsumerStatefulWidget {
-  /// See `LoginView.includeWindowChrome`'s doc comment — this screen is
-  /// only ever reached by being pushed from a `LoginView`, so it just
-  /// inherits whatever that caller determined about its own context
-  /// instead of re-deciding independently.
+  /// See `LoginView.includeWindowChrome`'s doc comment — pass whatever the
+  /// caller determined about its own context instead of re-deciding
+  /// independently. True (the default) when pushed from `LoginView` at the
+  /// top level; `AccountView` passes `false` since it's reached from
+  /// inside the authenticated sidebar shell instead.
   final bool includeWindowChrome;
 
-  const ForgotPasswordView({super.key, this.includeWindowChrome = true});
+  /// True when reached from `AccountView`'s "修改密码" row instead of the
+  /// original logged-out "忘记密码？" flow — same real reset-by-email-code
+  /// mechanism either way (there's no separate "change password while
+  /// signed in" endpoint), but the copy below assumes a logged-out visitor
+  /// by default ("返回登录", "登录即表示同意..."), which reads wrong for an
+  /// already-authenticated user just changing their password.
+  final bool fromAccountSettings;
+
+  const ForgotPasswordView({
+    super.key,
+    this.includeWindowChrome = true,
+    this.fromAccountSettings = false,
+  });
 
   @override
   ConsumerState<ForgotPasswordView> createState() => _ForgotPasswordViewState();
@@ -317,19 +330,21 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.arrow_back_rounded, size: 18),
-                        SizedBox(width: HgfastSpacing.xs),
-                        Text('返回登录'),
+                        const Icon(Icons.arrow_back_rounded, size: 18),
+                        const SizedBox(width: HgfastSpacing.xs),
+                        Text(widget.fromAccountSettings ? '返回' : '返回登录'),
                       ],
                     ),
                   ),
                   const SizedBox(height: HgfastSpacing.lg),
-                  const HgfastAuthFooterCaption(
-                    text: 'HGFAST v1.0.0 · 登录即表示同意《用户协议》与《隐私政策》',
+                  HgfastAuthFooterCaption(
+                    text: widget.fromAccountSettings
+                        ? 'HGFAST v1.0.0'
+                        : 'HGFAST v1.0.0 · 登录即表示同意《用户协议》与《隐私政策》',
                   ),
                 ],
               ),

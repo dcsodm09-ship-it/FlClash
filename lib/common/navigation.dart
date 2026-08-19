@@ -1,9 +1,12 @@
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/pages/account/account_view.dart';
 import 'package:fl_clash/pages/discover/discover_view.dart';
+import 'package:fl_clash/pages/docs/docs_view.dart';
 import 'package:fl_clash/pages/invite/invite_view.dart';
 import 'package:fl_clash/pages/plans/plans_view.dart';
 import 'package:fl_clash/pages/support/support_view.dart';
+import 'package:fl_clash/pages/vip/vip_view.dart';
 import 'package:fl_clash/views/views.dart';
 import 'package:flutter/material.dart';
 
@@ -133,7 +136,7 @@ class Navigation {
         icon: const Icon(Icons.person),
         label: PageLabel.account,
         builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.account)),
+            const AccountView(key: GlobalObjectKey(PageLabel.account)),
         path: '/account',
         modes: enableHgfast
             ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
@@ -143,8 +146,7 @@ class Navigation {
         keep: false,
         icon: const Icon(Icons.workspace_premium),
         label: PageLabel.vip,
-        builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.vip)),
+        builder: (_) => const VipView(key: GlobalObjectKey(PageLabel.vip)),
         path: '/vip',
         modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
@@ -161,8 +163,7 @@ class Navigation {
         keep: false,
         icon: const Icon(Icons.menu_book),
         label: PageLabel.docs,
-        builder: (_) =>
-            const SizedBox.shrink(key: GlobalObjectKey(PageLabel.docs)),
+        builder: (_) => const DocsView(key: GlobalObjectKey(PageLabel.docs)),
         path: '/docs',
         modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
