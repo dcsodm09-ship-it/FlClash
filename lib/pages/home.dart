@@ -11,8 +11,23 @@ import 'package:intl/intl.dart';
 
 typedef OnSelected = void Function(int index);
 
+// dashboard/profiles/tools/support are desktop-only NavigationItems (see
+// lib/common/navigation.dart) reached on mobile through _MoreDrawer instead
+// of a bottom-nav tab, so the bar stays at 4 destinations.
+const _moreDrawerLabels = {
+  PageLabel.dashboard,
+  PageLabel.profiles,
+  PageLabel.tools,
+  PageLabel.support,
+};
+
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
+
+  // Stable across rebuilds (HomePage has exactly one live instance as the
+  // app's root page) so the Scaffold identity — and therefore the Drawer —
+  // doesn't get torn down and recreated on every rebuild.
+  static final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   void _handleToPage(PageLabel pageLabel) {
     globalState.container
@@ -38,24 +53,45 @@ class HomePage extends ConsumerWidget {
               final isMobile = state.viewMode == ViewMode.mobile;
               final navigationItems = state.navigationItems;
               final currentIndex = state.currentIndex;
+              // Unfiltered list (navigationItemsStateProvider, not
+              // currentNavigationItemsStateProvider) so items with
+              // modes: [desktop] — now excluded from `navigationItems` on
+              // mobile — can still be picked out for the drawer by label.
+              final moreItems = isMobile
+                  ? ref
+                        .watch(navigationItemsStateProvider)
+                        .value
+                        .where((item) => _moreDrawerLabels.contains(item.label))
+                        .toList()
+                  : const <NavigationItem>[];
+              final destinations = [
+                ...navigationItems.map(
+                  (e) => NavigationDestination(
+                    icon: e.icon,
+                    label: Intl.message(e.label.name),
+                  ),
+                ),
+                if (moreItems.isNotEmpty)
+                  NavigationDestination(
+                    icon: const Icon(Icons.menu),
+                    label: Intl.message('more'),
+                  ),
+              ];
               final bottomNavigationBar = NavigationBarTheme(
                 data: _NavigationBarDefaultsM3(context),
                 child: NavigationBar(
-                  destinations: navigationItems
-                      .map(
-                        (e) => NavigationDestination(
-                          icon: e.icon,
-                          label: Intl.message(e.label.name),
-                        ),
-                      )
-                      .toList(),
+                  destinations: destinations,
                   onDestinationSelected: (index) {
+                    if (index >= navigationItems.length) {
+                      _scaffoldKey.currentState?.openDrawer();
+                      return;
+                    }
                     _handleToPage(navigationItems[index].label);
                   },
                   selectedIndex: currentIndex,
                 ),
               );
-              return Column(
+              final content = Column(
                 children: [
                   Flexible(
                     flex: 1,
@@ -83,6 +119,15 @@ class HomePage extends ConsumerWidget {
                     ),
                   ),
                 ],
+              );
+              if (moreItems.isEmpty) {
+                return content;
+              }
+              return Scaffold(
+                key: _scaffoldKey,
+                backgroundColor: Colors.transparent,
+                drawer: _MoreDrawer(items: moreItems),
+                body: content,
               );
             },
             child: Consumer(
@@ -321,6 +366,50 @@ class HomeBackScopeContainer extends ConsumerWidget {
         return false;
       },
       child: child,
+    );
+  }
+}
+
+// No ListItem.open here: it hardcodes onTap to null (see lib/widgets/list.dart),
+// so it can't close this Drawer before pushing. Plain ListTile + BaseNavigator.push
+// mirrors the pattern account_view.dart's _ListRow already uses for the same
+// "row that opens another screen" need.
+class _MoreDrawer extends StatelessWidget {
+  final List<NavigationItem> items;
+
+  const _MoreDrawer({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              child: Align(
+                alignment: AlignmentDirectional.bottomStart,
+                child: Text(
+                  Intl.message('more'),
+                  style: context.textTheme.titleLarge,
+                ),
+              ),
+            ),
+            for (final item in items)
+              ListTile(
+                leading: item.icon,
+                title: Text(Intl.message(item.label.name)),
+                subtitle: item.description != null
+                    ? Text(Intl.message(item.description!))
+                    : null,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  BaseNavigator.push(context, item.builder(context));
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

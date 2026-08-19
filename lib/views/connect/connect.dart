@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
+import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -68,6 +69,7 @@ class _ConnectViewState extends ConsumerState<ConnectView> {
             ? _ConnectNodeList(
                 state: state,
                 onSelected: handleSelected,
+                isMobile: isMobile,
                 banner: _ConnectBanner(
                   tone: _BannerTone.warning,
                   message: appLocalizations.connectNotInCanary,
@@ -84,6 +86,7 @@ class _ConnectViewState extends ConsumerState<ConnectView> {
             ? _ConnectNodeList(
                 state: state,
                 onSelected: handleSelected,
+                isMobile: isMobile,
                 banner: _ConnectBanner(
                   tone: _BannerTone.error,
                   message: appLocalizations.connectLoadFailed,
@@ -105,11 +108,16 @@ class _ConnectViewState extends ConsumerState<ConnectView> {
       ),
       ConnectLoadPhase.loading =>
         hasCachedNodes
-            ? _ConnectNodeList(state: state, onSelected: handleSelected)
+            ? _ConnectNodeList(
+                state: state,
+                onSelected: handleSelected,
+                isMobile: isMobile,
+              )
             : _ConnectLoading(onRetry: handleRetry),
       ConnectLoadPhase.loaded => _ConnectNodeList(
         state: state,
         onSelected: handleSelected,
+        isMobile: isMobile,
       ),
     };
 
@@ -131,13 +139,32 @@ class _ConnectViewState extends ConsumerState<ConnectView> {
 class _ConnectNodeList extends StatelessWidget {
   final ConnectNodesState state;
   final ValueChanged<NodeTypeFilter> onSelected;
+  final bool isMobile;
   final Widget? banner;
 
   const _ConnectNodeList({
     required this.state,
     required this.onSelected,
+    required this.isMobile,
     this.banner,
   });
+
+  // GlobalObjectKey identity comes from `==` on the wrapped value, not
+  // instance identity — keying by the NodeCategory enum value itself (not a
+  // fresh GlobalKey()) keeps the rail's targets stable across rebuilds even
+  // though `groups` is recomputed from scratch on every build.
+  GlobalObjectKey _groupHeaderKey(NodeCategory category) =>
+      GlobalObjectKey(('connect-node-group', category));
+
+  void _scrollToGroup(NodeCategory category) {
+    final headerContext = _groupHeaderKey(category).currentContext;
+    if (headerContext == null) return;
+    Scrollable.ensureVisible(
+      headerContext,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,42 +174,79 @@ class _ConnectNodeList extends StatelessWidget {
       NodeTypeFilter.regional => appLocalizations.regionalGrouped,
       _ => null,
     };
+    // Grouped-by-category sections (VIP/独享IP/住宅IP/标准) only make sense
+    // for the unfiltered "全部" view — every other filter already narrows
+    // state.nodes to a single category, where a repeated one-group header
+    // would just restate the chip that's already selected above it.
+    final groups = state.selectedFilter == NodeTypeFilter.all
+        ? _groupNodesByCategory(state.nodes)
+        : null;
+    // The rail only earns its keep once there's more than one group to
+    // jump between — desktop already has room for the full list at a glance
+    // (and its own connect-side panel), so this is a mobile-only aid.
+    final showIndexRail = isMobile && groups != null && groups.length > 1;
     return Column(
       children: [
         ?banner,
         Expanded(
           child: DecoratedBox(
             decoration: const BoxDecoration(color: hgHeroBackground),
-            child: CustomScrollView(
-              slivers: [
-                const SliverToBoxAdapter(child: ConnectHero()),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _ConnectFilterHeaderDelegate(
-                    availableFilters: state.availableFilters,
-                    selectedFilter: state.selectedFilter,
-                    onSelected: onSelected,
-                    hintText: hintText,
-                    backgroundColor: hgHeroBackground,
-                  ),
+            child: Stack(
+              children: [
+                CustomScrollView(
+                  slivers: [
+                    const SliverToBoxAdapter(child: ConnectHero()),
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _ConnectFilterHeaderDelegate(
+                        availableFilters: state.availableFilters,
+                        selectedFilter: state.selectedFilter,
+                        onSelected: onSelected,
+                        hintText: hintText,
+                        backgroundColor: hgHeroBackground,
+                      ),
+                    ),
+                    if (state.nodes.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: NullStatus(
+                          label: appLocalizations.nullTip(
+                            appLocalizations.nodes,
+                          ),
+                        ),
+                      )
+                    else if (groups != null)
+                      for (final group in groups) ...[
+                        SliverToBoxAdapter(
+                          child: ListHeader(
+                            key: _groupHeaderKey(group.category),
+                            title: Intl.message(group.category.name),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          sliver: SliverList.builder(
+                            itemCount: group.nodes.length,
+                            itemBuilder: (context, index) {
+                              return NodeItem(node: group.nodes[index]);
+                            },
+                          ),
+                        ),
+                      ]
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 16),
+                        sliver: SuperSliverList.builder(
+                          itemCount: state.nodes.length,
+                          itemBuilder: (context, index) {
+                            return NodeItem(node: state.nodes[index]);
+                          },
+                        ),
+                      ),
+                  ],
                 ),
-                if (state.nodes.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: NullStatus(
-                      label: appLocalizations.nullTip(appLocalizations.nodes),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 16),
-                    sliver: SuperSliverList.builder(
-                      itemCount: state.nodes.length,
-                      itemBuilder: (context, index) {
-                        return NodeItem(node: state.nodes[index]);
-                      },
-                    ),
-                  ),
+                if (showIndexRail)
+                  _ConnectIndexRail(groups: groups, onSelect: _scrollToGroup),
               ],
             ),
           ),
@@ -190,6 +254,99 @@ class _ConnectNodeList extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ConnectIndexRail extends StatelessWidget {
+  final List<_NodeGroup> groups;
+  final ValueChanged<NodeCategory> onSelect;
+
+  const _ConnectIndexRail({required this.groups, required this.onSelect});
+
+  // Short enough to fit a narrow vertical rail without wrapping. All four
+  // category labels (VIP/独享IP/住宅IP/标准, per arb/intl_zh_CN.arb) are
+  // BMP characters, so plain substring indexing is safe here.
+  String _shortLabel(BuildContext context, NodeCategory category) {
+    final full = Intl.message(category.name);
+    return full.length > 2 ? full.substring(0, 1) : full;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return Positioned(
+      right: 8,
+      top: 0,
+      bottom: 0,
+      child: Center(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.14),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final group in groups)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => onSelect(group.category),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 6,
+                        horizontal: 6,
+                      ),
+                      child: Text(
+                        _shortLabel(context, group.category),
+                        style: context.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+typedef _NodeGroup = ({NodeCategory category, List<NodeSpec> nodes});
+
+// vip/dedicatedIp/residential first (the premium/allocated tiers a member
+// would look for first), standard last as the general pool — mirrors the
+// order NodeTypeFilter's own chips already use in _ConnectFilterHeaderDelegate.
+const _nodeGroupOrder = [
+  NodeCategory.vip,
+  NodeCategory.dedicatedIp,
+  NodeCategory.residential,
+  NodeCategory.standard,
+];
+
+List<_NodeGroup> _groupNodesByCategory(List<NodeSpec> nodes) {
+  final byCategory = <NodeCategory, List<NodeSpec>>{};
+  for (final node in nodes) {
+    byCategory.putIfAbsent(node.category, () => []).add(node);
+  }
+  for (final group in byCategory.values) {
+    group.sort((a, b) => a.sort.compareTo(b.sort));
+  }
+  return [
+    for (final category in _nodeGroupOrder)
+      if (byCategory[category] case final groupNodes?)
+        (category: category, nodes: groupNodes),
+  ];
 }
 
 class _ConnectLoading extends StatelessWidget {

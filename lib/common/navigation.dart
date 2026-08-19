@@ -25,6 +25,10 @@ class Navigation {
         label: PageLabel.dashboard,
         builder: (_) =>
             const DashboardView(key: GlobalObjectKey(PageLabel.dashboard)),
+        // Reached on mobile via the "更多" drawer (see home.dart _MoreDrawer)
+        // instead of a bottom-nav tab — see the `support` comment below for
+        // why the mobile bar needs to stay short.
+        modes: const [NavigationItemMode.desktop],
       ),
       NavigationItem(
         icon: const Icon(Icons.article),
@@ -40,6 +44,9 @@ class Navigation {
         label: PageLabel.profiles,
         builder: (_) =>
             const ProfilesView(key: GlobalObjectKey(PageLabel.profiles)),
+        // Reached on mobile via the "更多" drawer — see the `dashboard`/
+        // `support` comments above and below.
+        modes: const [NavigationItemMode.desktop],
       ),
       NavigationItem(
         icon: const Icon(Icons.view_timeline),
@@ -78,7 +85,9 @@ class Navigation {
         icon: const Icon(Icons.construction),
         label: PageLabel.tools,
         builder: (_) => const ToolsView(key: GlobalObjectKey(PageLabel.tools)),
-        modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
+        // Reached on mobile via the "更多" drawer — see the `dashboard`/
+        // `support` comments above/below.
+        modes: const [NavigationItemMode.desktop],
       ),
       NavigationItem(
         keep: false,
@@ -109,9 +118,15 @@ class Navigation {
         builder: (_) =>
             const SupportView(key: GlobalObjectKey(PageLabel.support)),
         path: '/support',
-        modes: enableHgfast
-            ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
-            : [],
+        // Mobile's NavigationBar was carrying 8 destinations (dashboard,
+        // proxies, profiles, tools, connect, discover, support, account) —
+        // well past Material 3's 3-5 guidance even after `invite` was
+        // already kept out (see its own comment below). dashboard/profiles/
+        // tools/support move to desktop-only here and become reachable on
+        // mobile through the new "更多" drawer item in home.dart's
+        // _MoreDrawer instead, leaving connect/proxies/discover/account as
+        // the 4 primary bottom-bar destinations.
+        modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
       NavigationItem(
         keep: false,
@@ -120,15 +135,13 @@ class Navigation {
         builder: (_) =>
             const InviteView(key: GlobalObjectKey(PageLabel.invite)),
         path: '/invite',
-        // Deliberately not a bottom-nav destination: mobile's NavigationBar
-        // already carries 8 items when enableHgfast is on (dashboard,
-        // proxies, profiles, tools, connect, discover, support, account —
-        // vip/plans/docs are desktop-only and never in the mobile bar), and
-        // Material 3 recommends 3-5. A 9th item would push past that, and
-        // InviteView's own doc comment notes there is no natural top-level
-        // slot for it yet anyway. Keep the route reachable via
-        // BaseNavigator.push(...) from wherever a future "我的"/account hub
-        // links out to it, instead of forcing a 9th bottom-tab item.
+        // Deliberately not a bottom-nav destination. The mobile bar is now
+        // just connect/proxies/discover/account (dashboard/profiles/tools/
+        // support moved to the "更多" drawer, see the `support` comment
+        // above) — but invite still doesn't get a 5th slot: it's a one-off
+        // promo action, not a destination someone returns to repeatedly like
+        // the other four, so it stays reachable via BaseNavigator.push(...)
+        // from wherever a "我的"/account hub links out to it instead.
         modes: const [],
       ),
       NavigationItem(
