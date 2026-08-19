@@ -11,14 +11,19 @@ import 'package:intl/intl.dart';
 
 typedef OnSelected = void Function(int index);
 
-// dashboard/profiles/tools/support are desktop-only NavigationItems (see
-// lib/common/navigation.dart) reached on mobile through _MoreDrawer instead
-// of a bottom-nav tab, so the bar stays at 4 destinations.
+// vip/profiles/tools/invite are all desktop-rail/settings-adjacent items
+// that don't fit mobile's 4-slot bottom bar. Reached on mobile through
+// _MoreDrawer instead of a bottom-nav tab, so the bar stays short.
+// dashboard/support were the original picks here but got swapped out for
+// vip/invite (revenue/growth entries) — dashboard mostly duplicates stats
+// already on the connect screen; support loses its only mobile drawer
+// entry but stays reachable from Connect's access-gate CTAs
+// (onContactSupport in connect.dart's _ConnectAccessGate).
 const _moreDrawerLabels = {
-  PageLabel.dashboard,
+  PageLabel.vip,
   PageLabel.profiles,
   PageLabel.tools,
-  PageLabel.support,
+  PageLabel.invite,
 };
 
 class HomePage extends ConsumerWidget {

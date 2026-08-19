@@ -25,9 +25,9 @@ class Navigation {
         label: PageLabel.dashboard,
         builder: (_) =>
             const DashboardView(key: GlobalObjectKey(PageLabel.dashboard)),
-        // Reached on mobile via the "更多" drawer (see home.dart _MoreDrawer)
-        // instead of a bottom-nav tab — see the `support` comment below for
-        // why the mobile bar needs to stay short.
+        // Desktop-only. Was reachable on mobile via the "更多" drawer too,
+        // but got swapped out for vip (see home.dart's _moreDrawerLabels) —
+        // dashboard mostly duplicates stats already on the connect screen.
         modes: const [NavigationItemMode.desktop],
       ),
       NavigationItem(
@@ -44,8 +44,8 @@ class Navigation {
         label: PageLabel.profiles,
         builder: (_) =>
             const ProfilesView(key: GlobalObjectKey(PageLabel.profiles)),
-        // Reached on mobile via the "更多" drawer — see the `dashboard`/
-        // `support` comments above and below.
+        // Reached on mobile via the "更多" drawer — see home.dart's
+        // _moreDrawerLabels for the full current set.
         modes: const [NavigationItemMode.desktop],
       ),
       NavigationItem(
@@ -85,8 +85,8 @@ class Navigation {
         icon: const Icon(Icons.construction),
         label: PageLabel.tools,
         builder: (_) => const ToolsView(key: GlobalObjectKey(PageLabel.tools)),
-        // Reached on mobile via the "更多" drawer — see the `dashboard`/
-        // `support` comments above/below.
+        // Reached on mobile via the "更多" drawer — see home.dart's
+        // _moreDrawerLabels for the full current set.
         modes: const [NavigationItemMode.desktop],
       ),
       NavigationItem(
@@ -121,11 +121,13 @@ class Navigation {
         // Mobile's NavigationBar was carrying 8 destinations (dashboard,
         // proxies, profiles, tools, connect, discover, support, account) —
         // well past Material 3's 3-5 guidance even after `invite` was
-        // already kept out (see its own comment below). dashboard/profiles/
-        // tools/support move to desktop-only here and become reachable on
-        // mobile through the new "更多" drawer item in home.dart's
-        // _MoreDrawer instead, leaving connect/proxies/discover/account as
-        // the 4 primary bottom-bar destinations.
+        // already kept out (see its own comment below). Desktop-only here;
+        // dashboard/profiles/tools/support originally all moved into the
+        // "更多" drawer together, but support was later swapped out for
+        // vip/invite (revenue/growth entries, see home.dart's
+        // _moreDrawerLabels) — support keeps a narrower path back via
+        // Connect's access-gate CTAs (onContactSupport in connect.dart's
+        // _ConnectAccessGate) instead of a drawer entry.
         modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
       NavigationItem(
@@ -135,13 +137,13 @@ class Navigation {
         builder: (_) =>
             const InviteView(key: GlobalObjectKey(PageLabel.invite)),
         path: '/invite',
-        // Deliberately not a bottom-nav destination. The mobile bar is now
-        // just connect/proxies/discover/account (dashboard/profiles/tools/
-        // support moved to the "更多" drawer, see the `support` comment
-        // above) — but invite still doesn't get a 5th slot: it's a one-off
-        // promo action, not a destination someone returns to repeatedly like
-        // the other four, so it stays reachable via BaseNavigator.push(...)
-        // from wherever a "我的"/account hub links out to it instead.
+        // Not a bottom-nav destination on either platform (kept out of
+        // `modes` entirely) — it's a one-off promo action, not a destination
+        // someone returns to repeatedly like the 4 primary bottom-bar items.
+        // It IS one of the mobile "更多" drawer's 4 entries though (see
+        // home.dart's _moreDrawerLabels), and stays reachable via
+        // BaseNavigator.push(...) from wherever else links out to it (e.g. a
+        // "我的"/account hub).
         modes: const [],
       ),
       NavigationItem(
@@ -161,6 +163,8 @@ class Navigation {
         label: PageLabel.vip,
         builder: (_) => const VipView(key: GlobalObjectKey(PageLabel.vip)),
         path: '/vip',
+        // Desktop rail only (unchanged), but also one of the mobile "更多"
+        // drawer's 4 entries — see home.dart's _moreDrawerLabels.
         modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
       NavigationItem(
