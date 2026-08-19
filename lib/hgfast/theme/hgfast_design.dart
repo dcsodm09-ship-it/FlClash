@@ -340,15 +340,44 @@ class _HgfastAuthWindowChrome extends StatelessWidget {
         if (windowHeaderContainerAlreadyHandlesThis) {
           return child;
         }
+        final colorScheme = Theme.of(context).colorScheme;
         return Column(
           children: [
             GestureDetector(
               key: const ValueKey('hgfastAuthWindowDragStrip'),
               onPanStart: (_) => windowManager.startDragging(),
               onDoubleTap: _toggleMaximize,
-              child: ColoredBox(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                child: SizedBox(width: double.infinity, height: kHeaderHeight),
+              child: Container(
+                width: double.infinity,
+                height: kHeaderHeight,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(
+                  left: _macTrafficLightClearance,
+                ),
+                decoration: BoxDecoration(
+                  // A tinted strip with a bottom border, not a transparent
+                  // one — this is the exact desktop-titlebar treatment
+                  // from the original UI-kit mockup
+                  // (claude.ai/code/artifact/dbe54ac4-...): background
+                  // distinct from the page body, border-bottom separator,
+                  // a small monospace label after where the traffic
+                  // lights sit. colorScheme.surface/outline are the same
+                  // tokens CommonScrollBar/inputs already use for that
+                  // "one step up from the background" surface, so this
+                  // stays consistent with the rest of the auth theme
+                  // instead of inventing a third shade.
+                  color: colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(color: colorScheme.outline),
+                  ),
+                ),
+                child: Text(
+                  'HGFAST — 桌面客户端',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: colorScheme.onSurfaceVariant,
+                  ).toJetBrainsMono,
+                ),
               ),
             ),
             Expanded(child: child),
@@ -358,6 +387,15 @@ class _HgfastAuthWindowChrome extends StatelessWidget {
     );
   }
 }
+
+/// Left padding for the desktop-titlebar label, wide enough to clear
+/// macOS's native traffic-light buttons (drawn by the OS, not by this
+/// widget — TitleBarStyle.hidden keeps them, see common/window.dart).
+/// Matches the mockup's own dot-cluster geometry (16px padding + 3×11px
+/// dots + 2×7px gaps + 10px flex-gap + 6px label margin ≈ 68px), rounded
+/// up for real-world macOS traffic-light spacing, which varies slightly
+/// by OS version.
+const double _macTrafficLightClearance = 78;
 
 /// Small rounded-square gradient brand/icon mark shown above auth headlines.
 class HgfastBrandMark extends StatelessWidget {
