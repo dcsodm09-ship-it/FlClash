@@ -7,9 +7,12 @@
 //
 // Kept dependency-light on purpose: pure Flutter, no new pub packages.
 
-import 'package:fl_clash/common/scroll.dart';
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/scroll.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:window_manager/window_manager.dart';
 
 /// Keeps the app-wide desktop scrollbar's real behavior (CommonScrollBar,
 /// already `interactive: true`) but forces its thumb persistently visible
@@ -121,10 +124,35 @@ class HgfastGradients {
 ///   child: CommonScaffold(...),
 /// );
 /// ```
+///
+/// This scope is reused far more broadly than its name suggests — not just
+/// by the 3 real auth screens (login/register/forgot-password) but also by
+/// discover/support/plans/invite, none of which are auth-only. That's why
+/// [includeWindowChrome] (the macOS drag-strip / traffic-light-clearance
+/// fix — see [_HgfastAuthWindowChrome]) defaults to `false` and must be
+/// opted into explicitly: those 4 other screens all render inside `HomePage`
+/// → `AppSidebarContainer`, which already reserves its own macOS
+/// traffic-light clearance via the sidebar's `SizedBox(height: 22)`
+/// (`lib/manager/app_manager.dart`). Turning the strip on there too would
+/// insert a second, differently-colored horizontal band in the content
+/// column only (not shifting the sidebar next to it) — reproducing the
+/// exact "横条" artifact this was built to fix, just relocated. Confirmed
+/// by an earlier review with a live widget-test probe: it really did
+/// render on `DiscoverView`/`PlansView`. Only login/register/forgot-password
+/// pass `includeWindowChrome: true`.
 class HgfastAuthScope extends StatelessWidget {
   final Widget child;
 
-  const HgfastAuthScope({super.key, required this.child});
+  /// See the class doc above — leave this `false` everywhere except the 3
+  /// real auth screens, which have no sidebar and so get no macOS
+  /// traffic-light clearance from anywhere else.
+  final bool includeWindowChrome;
+
+  const HgfastAuthScope({
+    super.key,
+    required this.child,
+    this.includeWindowChrome = false,
+  });
 
   static ColorScheme _darkScheme() {
     return const ColorScheme.dark(
@@ -246,8 +274,87 @@ class HgfastAuthScope extends StatelessWidget {
       data: _buildTheme(Theme.of(context)),
       child: ScrollConfiguration(
         behavior: _HgfastScrollBehavior(),
-        child: child,
+        child: includeWindowChrome
+            ? _HgfastAuthWindowChrome(child: child)
+            : child,
       ),
+    );
+  }
+}
+
+/// Reserves a native-title-bar-equivalent drag / traffic-light-clearance
+/// strip above the auth screens' AppBar on a macOS desktop-width window —
+/// the concrete "横条" (horizontal bar) this was built to fix.
+///
+/// macOS windows here run with `TitleBarStyle.hidden` (see
+/// `common/window.dart`), so there is no native title bar left to grab to
+/// move the window, and nothing reserving space for the traffic-light
+/// buttons either. Every *other* screen gets this for free because it's
+/// wrapped in `AppSidebarContainer`, whose left rail adds
+/// `if (system.isMacOS) const SizedBox(height: 22)` above its nav icons
+/// specifically so the traffic lights have blank space to sit in
+/// (`lib/manager/app_manager.dart`). The auth flow (login/register/
+/// forgot-password) has no sidebar — `HgfastAuthScope` goes straight into
+/// `CommonScaffold`'s `AppBar`, which starts flush at the window's actual
+/// top-left pixel, so at this app's default window size (680x580 — already
+/// wider than the 600px mobile breakpoint, i.e. `isMobileView == false`)
+/// the "登录"/"注册"/"忘记密码" title and the "遇到问题？" action rendered
+/// right where the traffic lights are, and none of that top strip was
+/// draggable — the window could only be moved by dragging its edges.
+///
+/// This only needs to add its own strip when the app-level
+/// `WindowHeaderContainer` (`lib/manager/window_manager.dart`) is *not*
+/// already adding its own `WindowHeader` above us — i.e. the exact same
+/// condition it uses to decide to render its child bare. In the other
+/// branch (the window resized down to mobile width) `WindowHeader` already
+/// reserves and drags that space itself (centered "HGFAST" text, clear of
+/// the traffic lights because it's centered, not left-aligned) — adding a
+/// second strip here would just stack two bars.
+class _HgfastAuthWindowChrome extends StatelessWidget {
+  final Widget child;
+
+  const _HgfastAuthWindowChrome({required this.child});
+
+  Future<void> _toggleMaximize() async {
+    if (await windowManager.isMaximized()) {
+      await windowManager.unmaximize();
+    } else {
+      await windowManager.maximize();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!system.isMacOS) {
+      return child;
+    }
+    return Consumer(
+      builder: (_, ref, _) {
+        final isMobileView = ref.watch(isMobileViewProvider);
+        final version = ref.watch(versionProvider);
+        // Mirrors WindowHeaderContainer's own gate exactly: when this is
+        // true, WindowHeaderContainer is already rendering a WindowHeader
+        // above the whole app (including this screen) — stay out of its way.
+        final windowHeaderContainerAlreadyHandlesThis =
+            version > 10 && isMobileView;
+        if (windowHeaderContainerAlreadyHandlesThis) {
+          return child;
+        }
+        return Column(
+          children: [
+            GestureDetector(
+              key: const ValueKey('hgfastAuthWindowDragStrip'),
+              onPanStart: (_) => windowManager.startDragging(),
+              onDoubleTap: _toggleMaximize,
+              child: ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: SizedBox(width: double.infinity, height: kHeaderHeight),
+              ),
+            ),
+            Expanded(child: child),
+          ],
+        );
+      },
     );
   }
 }

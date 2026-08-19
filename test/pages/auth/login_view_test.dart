@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
@@ -53,6 +54,75 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('HGFAST'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'reserves a draggable macOS-only strip above the AppBar at desktop '
+    'window width so the window can still be moved and the native '
+    'traffic-light buttons have clearance (regression: before this fix, '
+    "CommonScaffold's AppBar started flush at (0,0) on a macOS "
+    'desktop-width window — nothing there was draggable and nothing kept '
+    'clear of the traffic lights)',
+    (tester) async {
+      // viewSizeProvider defaults to Size.zero, which getViewMode()
+      // classifies as mobile — force a real desktop width so this
+      // exercises the same branch the app hits at its actual default
+      // window size (680x580, already wider than the 600px mobile
+      // breakpoint).
+      final container = ProviderContainer(
+        overrides: [
+          viewSizeProvider.overrideWithBuild((_, _) => const Size(680, 580)),
+          versionProvider.overrideWithBuild((_, _) => 15),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: LoginView()),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), null);
+      expect(
+        find.byKey(const ValueKey('hgfastAuthWindowDragStrip')),
+        system.isMacOS ? findsOneWidget : findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'does not add a second drag strip when the window is narrow enough '
+    'that WindowHeaderContainer is already rendering its own WindowHeader '
+    'above the whole app (regression: would otherwise stack two '
+    'horizontal bars)',
+    (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          viewSizeProvider.overrideWithBuild((_, _) => const Size(400, 580)),
+          versionProvider.overrideWithBuild((_, _) => 15),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: LoginView()),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), null);
+      expect(
+        find.byKey(const ValueKey('hgfastAuthWindowDragStrip')),
+        findsNothing,
+      );
     },
   );
 

@@ -7,6 +7,7 @@ import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
 import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/pages/auth/login_view.dart';
 import 'package:fl_clash/pages/invite/invite_providers.dart';
 import 'package:fl_clash/pages/invite/invite_view.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -172,6 +173,49 @@ void main() {
 
       expect(find.text('参与抽奖赢取奖励'), findsNothing);
     });
+
+    testWidgets(
+      'the nested LoginView pushed from the signed-out state never gets '
+      'the macOS drag strip (regression: this LoginView is pushed while '
+      'still inside the authenticated sidebar shell — HomePage -> '
+      'AppSidebarContainer — which already reserves its own macOS '
+      'traffic-light clearance; only the top-level LoginView reached via '
+      'AuthShell before login should ever get the strip)',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            hgfastRepositoryProvider.overrideWithValue(_FakeRepository()),
+            viewSizeProvider.overrideWithBuild(
+              (_, _) => const Size(680, 580),
+            ),
+            versionProvider.overrideWithBuild((_, _) => 15),
+          ],
+        );
+        addTearDown(container.dispose);
+        globalState.container = container;
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const _TestApp(child: InviteView()),
+          ),
+        );
+        container.read(hgfastAuthProvider.notifier).markUnauthenticated();
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.text('去登录'), findsOneWidget);
+        await tester.tap(find.text('去登录'));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), null);
+        expect(find.byType(LoginView), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('hgfastAuthWindowDragStrip')),
+          findsNothing,
+        );
+      },
+    );
   });
 }
 

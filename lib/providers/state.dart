@@ -684,6 +684,29 @@ SharedState sharedState(Ref ref) {
   );
 }
 
+// KNOWN GAP (accepted, cosmetic, not fixed here): this provider models
+// exactly one binary — WindowHeaderContainer's own gate for whether it's
+// painting a WindowHeader (see lib/manager/window_manager.dart) — via the
+// same `(version<=10 || !isMobileView) && isMacOS` condition. It does not
+// know about the separate macOS drag strip that HgfastAuthScope's
+// `includeWindowChrome: true` screens (login/register/forgot-password)
+// add on top of that (see _HgfastAuthWindowChrome in
+// lib/hgfast/theme/hgfast_design.dart) — that strip applies on only 3 of
+// the app's many routes, and this provider has no route awareness to
+// express that. Net effect: on macOS at desktop width, while one of those
+// 3 screens is the current route, `top` here is still 0 (correct for
+// every OTHER route) but should really be `kHeaderHeight`, so
+// StatusManager's global toast overlay (lib/manager/status_manager.dart)
+// renders ~20px too high and overlaps the AppBar's top-right action.
+// This IS reachable on those 3 screens even though none of them call
+// showNotifier()/`.message(` themselves — the toast overlay is global and
+// has route-independent producers mounted above `isAuthenticated` (e.g.
+// CoreManager's onLog(error)/onGeoUpdate in lib/manager/core_manager.dart,
+// system.dart's helperCorruptTip), any of which can fire while a login
+// screen is on top. Not fixed because a real fix needs route awareness
+// this provider structurally lacks (a route observer or a mutable global
+// written during build) — both are a bigger, riskier change than a
+// transient 20px cosmetic overlap.
 @riverpod
 double overlayTopOffset(Ref ref) {
   final isMobileView = ref.watch(isMobileViewProvider);

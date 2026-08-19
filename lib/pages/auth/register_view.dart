@@ -7,7 +7,13 @@ import 'package:flutter/material.dart';
 import 'auth_shell.dart';
 
 class RegisterView extends StatelessWidget {
-  const RegisterView({super.key});
+  /// See `LoginView.includeWindowChrome`'s doc comment — this screen is
+  /// only ever reached by being pushed from a `LoginView`, so it just
+  /// inherits whatever that caller determined about its own context
+  /// instead of re-deciding independently.
+  final bool includeWindowChrome;
+
+  const RegisterView({super.key, this.includeWindowChrome = true});
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +28,7 @@ class RegisterView extends StatelessWidget {
       _ => '注册暂未开放',
     };
     return HgfastAuthScope(
+      includeWindowChrome: includeWindowChrome,
       child: CommonScaffold(
         title: '注册',
         actions: const [AuthTroubleButton()],

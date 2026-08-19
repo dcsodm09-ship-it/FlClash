@@ -12,7 +12,20 @@ import 'forgot_password_view.dart';
 import 'register_view.dart';
 
 class LoginView extends ConsumerStatefulWidget {
-  const LoginView({super.key});
+  /// Whether to reserve the macOS drag-strip / traffic-light-clearance
+  /// band above the AppBar (see `HgfastAuthScope.includeWindowChrome`'s doc
+  /// comment). Defaults to `true` because the common case — reached via
+  /// `AuthShell` at `application.dart`'s top-level
+  /// `isAuthenticated ? HomePage : AuthShell` branch — has no sidebar and
+  /// needs it. The one exception: `InviteView` pushes a `LoginView` as a
+  /// nested re-auth prompt when a session expires while already inside the
+  /// authenticated sidebar shell (`HomePage` → `AppSidebarContainer`) —
+  /// that call site passes `false`, since the sidebar already reserves its
+  /// own traffic-light clearance and a second strip there would reproduce
+  /// the exact bug this was built to fix, just one screen deeper.
+  final bool includeWindowChrome;
+
+  const LoginView({super.key, this.includeWindowChrome = true});
 
   @override
   ConsumerState<LoginView> createState() => _LoginViewState();
@@ -107,11 +120,17 @@ class _LoginViewState extends ConsumerState<LoginView> {
   }
 
   void _handleRegister() {
-    BaseNavigator.push(context, const RegisterView());
+    BaseNavigator.push(
+      context,
+      RegisterView(includeWindowChrome: widget.includeWindowChrome),
+    );
   }
 
   void _handleForgotPassword() {
-    BaseNavigator.push(context, const ForgotPasswordView());
+    BaseNavigator.push(
+      context,
+      ForgotPasswordView(includeWindowChrome: widget.includeWindowChrome),
+    );
   }
 
   void _toggleObscurePassword() {
@@ -124,6 +143,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     return HgfastAuthScope(
+      includeWindowChrome: widget.includeWindowChrome,
       child: CommonScaffold(
         title: '登录',
         actions: const [AuthTroubleButton()],

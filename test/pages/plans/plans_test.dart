@@ -258,6 +258,34 @@ void main() {
         expect(find.text('购买功能暂未开放，敬请期待'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'never renders the auth screens\' macOS drag strip (regression: this '
+      'screen is a real sidebar nav destination that already gets its own '
+      'macOS traffic-light clearance from AppSidebarContainer — a second '
+      'strip here would insert a mismatched-colored band in the content '
+      'column only, reproducing the exact "横条" bug the strip was built '
+      'to fix)',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            hgfastRepositoryProvider.overrideWithValue(_FakeRepository()),
+            viewSizeProvider.overrideWithBuild(
+              (_, _) => const Size(680, 580),
+            ),
+            versionProvider.overrideWithBuild((_, _) => 15),
+          ],
+        );
+        addTearDown(container.dispose);
+        await pump(tester, container);
+
+        expect(tester.takeException(), null);
+        expect(
+          find.byKey(const ValueKey('hgfastAuthWindowDragStrip')),
+          findsNothing,
+        );
+      },
+    );
   });
 }
 

@@ -30,7 +30,13 @@ const Set<String> _gatedResetErrorCodes = {
 };
 
 class ForgotPasswordView extends ConsumerStatefulWidget {
-  const ForgotPasswordView({super.key});
+  /// See `LoginView.includeWindowChrome`'s doc comment — this screen is
+  /// only ever reached by being pushed from a `LoginView`, so it just
+  /// inherits whatever that caller determined about its own context
+  /// instead of re-deciding independently.
+  final bool includeWindowChrome;
+
+  const ForgotPasswordView({super.key, this.includeWindowChrome = true});
 
   @override
   ConsumerState<ForgotPasswordView> createState() => _ForgotPasswordViewState();
@@ -147,6 +153,7 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     return HgfastAuthScope(
+      includeWindowChrome: widget.includeWindowChrome,
       child: CommonScaffold(
         title: '找回密码',
         actions: const [AuthTroubleButton()],

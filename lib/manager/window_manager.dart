@@ -262,7 +262,16 @@ class _WindowHeaderState extends State<WindowHeader> {
             ),
           ),
           if (system.isMacOS)
-            const Text(appName)
+            // Deliberately not `appName`: that constant is `'FlClash'`, the
+            // upstream project's internal identifier — it's also used for
+            // ~10 unrelated internal things app-wide (OS window title, tray
+            // tooltip, auto-launch task registration, WebDAV backup path,
+            // TUN device name...), so renaming the constant itself is a
+            // much bigger, separately-scoped change with real migration
+            // risk (e.g. orphaning an already-registered auto-launch task).
+            // This is the one place it leaked into user-visible text on an
+            // HGFAST screen; only this display string needed fixing.
+            const Text('HGFAST')
           else ...[
             Positioned(right: 0, child: _buildActions()),
           ],

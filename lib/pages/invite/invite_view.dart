@@ -106,7 +106,16 @@ class _InviteViewState extends ConsumerState<InviteView> {
           HgfastAuthPhase.unknown || HgfastAuthPhase.authenticating =>
             const Center(child: CommonCircleLoading()),
           HgfastAuthPhase.unauthenticated => _SignedOutState(
-            onLogin: () => BaseNavigator.push(context, const LoginView()),
+            // includeWindowChrome: false — this LoginView is pushed as a
+            // nested re-auth prompt while still inside the authenticated
+            // sidebar shell (HomePage -> AppSidebarContainer), which
+            // already reserves its own macOS traffic-light clearance via
+            // the sidebar's SizedBox(height: 22). See
+            // LoginView.includeWindowChrome's doc comment.
+            onLogin: () => BaseNavigator.push(
+              context,
+              const LoginView(includeWindowChrome: false),
+            ),
           ),
           HgfastAuthPhase.authenticated => _InviteBody(
             future: _future,
