@@ -253,11 +253,42 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
     if (!mounted) {
       return;
     }
-    final index = widget.navigationItems.indexWhere(
+    var index = widget.navigationItems.indexWhere(
       (item) => item.label == pageLabel,
     );
     if (index == -1) {
-      return;
+      // pageLabel just left this mode's navigationItems — most commonly
+      // the user was on a desktop-only page (dashboard/profiles/tools/
+      // support/vip/docs/plans) and the window shrank below the mobile
+      // breakpoint. Returning early here (the old behavior) left
+      // _pageController holding a scroll offset computed against the OLD,
+      // larger item count/viewport — on the real desktop nav (12 items)
+      // that's up to ~5 viewports past the new end, so the pane renders
+      // fully blank for the first ~20 frames, then settles on whatever
+      // page that stale offset happens to clamp to (not necessarily
+      // index 0), while navigationState's own currentIndex (used by the
+      // bottom bar/rail) already falls back to 0 independently — the two
+      // disagree indefinitely until the user taps a tab. Clamp the
+      // PageController to 0 AND reconcile currentPageLabelProvider so
+      // both the visible page and the highlighted tab settle on the same,
+      // now-reachable page instead of drifting apart.
+      if (widget.navigationItems.isEmpty) {
+        return;
+      }
+      index = 0;
+      final fallbackLabel = widget.navigationItems[0].label;
+      if (fallbackLabel != pageLabel) {
+        // Deferred to a post-frame callback: this branch can run from
+        // didUpdateWidget (a breakpoint-crossing resize changes
+        // navigationItems.length), and Riverpod forbids modifying a
+        // provider synchronously from a widget lifecycle method.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          ref.read(currentPageLabelProvider.notifier).toPage(fallbackLabel);
+        });
+      }
     }
     final isAnimateToPage = ref.read(appSettingProvider).isAnimateToPage;
     final isMobile = ref.read(isMobileViewProvider);

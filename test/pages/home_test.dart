@@ -10,6 +10,7 @@ import 'package:fl_clash/pages/home.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/application_setting.dart';
+import 'package:fl_clash/views/profiles/profiles.dart';
 import 'package:fl_clash/views/tools.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -248,6 +249,12 @@ void main() {
       );
       addTearDown(container.dispose);
       globalState.container = container;
+      // viewSizeProvider defaults to Size.zero (mobile) until the widget
+      // tree syncs the real window size on pump — set it first, or
+      // toPage(profiles) sees profiles as unreachable (desktop-only) and
+      // pushes instead of switching (there's no navigator yet to push
+      // into either, pre-pumpWidget, so it would silently no-op).
+      container.read(viewSizeProvider.notifier).value = const Size(1440, 900);
       container
           .read(currentPageLabelProvider.notifier)
           .toPage(PageLabel.profiles);
@@ -265,10 +272,31 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(tester.takeException(), isNull);
+      expect(find.byType(ProfilesView), findsOneWidget);
 
       tester.view.physicalSize = const Size(380, 900);
-      await tester.pump(const Duration(milliseconds: 16));
+      container.read(viewSizeProvider.notifier).value = const Size(380, 900);
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+
+      // profiles is desktop-only — dropping below the breakpoint removes
+      // it from navigationItems while CurrentPageLabel still says
+      // "profiles". Regression check for the PageController stale-offset
+      // bug this reproduced: _toPage used to return early on a now-
+      // unreachable label, leaving the PageView's scroll position stale
+      // against the new (mobile) item count/viewport — settling on
+      // whatever page that stale offset happened to clamp to (or a blank
+      // pane) while the bottom bar's own currentIndex fallback already
+      // showed a different page. Both should now agree on the same,
+      // reachable page instead of drifting apart indefinitely.
+      expect(find.byType(NavigationBar), findsOneWidget);
+      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      final settledLabel = container.read(currentPageLabelProvider);
+      expect(settledLabel, isNot(PageLabel.profiles));
+      final mobileItems = container
+          .read(currentNavigationItemsStateProvider)
+          .value;
+      expect(mobileItems[navBar.selectedIndex].label, settledLabel);
     },
   );
 
@@ -594,7 +622,9 @@ void main() {
     // one — CurrentPageLabel's own default (connect) isn't one of this
     // test's two synthetic items, and an inactive page's search field
     // can't pick up focus (see PageActivityScope/ExcludeFocus in home.dart).
-    container.read(currentPageLabelProvider.notifier).toPage(PageLabel.dashboard);
+    container
+        .read(currentPageLabelProvider.notifier)
+        .toPage(PageLabel.dashboard);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -657,7 +687,9 @@ void main() {
     container.read(viewSizeProvider.notifier).value = const Size(1200, 800);
     // Same as the mobile search test above: make dashboard the active page
     // so its content isn't excluded from focus.
-    container.read(currentPageLabelProvider.notifier).toPage(PageLabel.dashboard);
+    container
+        .read(currentPageLabelProvider.notifier)
+        .toPage(PageLabel.dashboard);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
