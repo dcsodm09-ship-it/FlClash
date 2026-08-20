@@ -138,7 +138,9 @@ class HomePage extends ConsumerWidget {
               return Scaffold(
                 key: _scaffoldKey,
                 backgroundColor: Colors.transparent,
-                drawer: moreItems.isEmpty ? null : _MoreDrawer(items: moreItems),
+                drawer: moreItems.isEmpty
+                    ? null
+                    : _MoreDrawer(items: moreItems),
                 body: content,
               );
             },

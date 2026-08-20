@@ -171,8 +171,7 @@ class Navigation {
         keep: false,
         icon: const Icon(Icons.payments),
         label: PageLabel.plans,
-        builder: (_) =>
-            const PlansView(key: GlobalObjectKey(PageLabel.plans)),
+        builder: (_) => const PlansView(key: GlobalObjectKey(PageLabel.plans)),
         path: '/plans',
         modes: enableHgfast ? [NavigationItemMode.desktop] : [],
       ),
