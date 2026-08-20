@@ -5,6 +5,8 @@ import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/repository/hgfast_result_x.dart';
 import 'package:fl_clash/hgfast/repository/repository.dart';
 import 'package:fl_clash/hgfast/theme/hgfast_design.dart';
+import 'package:fl_clash/hgfast/transport/decorrelated_jitter.dart';
+import 'package:fl_clash/hgfast/transport/poll_policy.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -72,19 +74,32 @@ class _PlanPrice {
   String get display => '¥${(cents / 100).toStringAsFixed(2)}';
 }
 
+class _PlanFeature {
+  const _PlanFeature({required this.feature, required this.support});
+
+  final String feature;
+  final bool support;
+}
+
 class _PlanData {
   const _PlanData({
     required this.id,
     required this.name,
+    required this.subtitle,
+    required this.features,
     required this.transferGb,
     required this.deviceLimit,
+    required this.speedLimitMbps,
     required this.prices,
   });
 
   final String id;
   final String name;
+  final String? subtitle;
+  final List<_PlanFeature> features;
   final int transferGb;
   final int? deviceLimit;
+  final int? speedLimitMbps;
   final List<_PlanPrice> prices;
 
   factory _PlanData.fromJson(Map<String, Object?> json) {
@@ -102,11 +117,39 @@ class _PlanData {
         if ((_asNum(pricesMap[period]) ?? 0) > 0)
           _PlanPrice(period: period, cents: _asNum(pricesMap[period])!.toInt()),
     ];
+    final subtitleRaw = json['subtitle'];
+    final featuresRaw = json['features'];
+    // v2board-adapter.js's parsePlanFeatures() already validates each entry
+    // server-side (JSON-array-of-{feature:string,support:bool} or []) — this
+    // is a second, independent check on the client rather than trusting the
+    // wire shape, matching how prices_cents is validated above instead of
+    // cast straight through.
+    final features = featuresRaw is List
+        ? featuresRaw
+              .whereType<Map>()
+              .map((entry) => entry.map((key, value) => MapEntry('$key', value)))
+              .where(
+                (entry) =>
+                    entry['feature'] is String && entry['support'] is bool,
+              )
+              .map(
+                (entry) => _PlanFeature(
+                  feature: entry['feature'] as String,
+                  support: entry['support'] as bool,
+                ),
+              )
+              .toList(growable: false)
+        : const <_PlanFeature>[];
     return _PlanData(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
+      subtitle: (subtitleRaw is String && subtitleRaw.trim().isNotEmpty)
+          ? subtitleRaw.trim()
+          : null,
+      features: features,
       transferGb: _asNum(json['transfer_gb'])?.toInt() ?? 0,
       deviceLimit: _asNum(json['device_limit'])?.toInt(),
+      speedLimitMbps: _asNum(json['speed_limit_mbps'])?.toInt(),
       prices: prices,
     );
   }
@@ -285,6 +328,52 @@ class _MessageState extends StatelessWidget {
   }
 }
 
+class _PlanFeatureList extends StatelessWidget {
+  const _PlanFeatureList({required this.features});
+
+  final List<_PlanFeature> features;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final feature in features)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  feature.support ? Icons.check_circle : Icons.cancel,
+                  size: 16,
+                  color: feature.support
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    feature.feature,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: feature.support
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurfaceVariant,
+                      decoration: feature.support
+                          ? null
+                          : TextDecoration.lineThrough,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _PlanCard extends ConsumerStatefulWidget {
   const _PlanCard({required this.plan});
 
@@ -357,8 +446,17 @@ class _PlanCardState extends ConsumerState<_PlanCard> {
   }
 
   Future<void> _pollOrderStatus(String orderId) async {
+    // The backend hands out a decorrelated-jitter schedule specifically so
+    // polling traffic doesn't have the fixed period + fixed size shape a
+    // traffic classifier keys on (see poll_policy.dart's own doc comment,
+    // quoting app/core/client_api/data.js). A fixed _pollInterval defeats
+    // that even though the server-side padding half of the mitigation still
+    // applies — so this always tries the real schedule first, only falling
+    // back to the fixed interval if /config or its poll_policy is
+    // unreachable/malformed (order-status polling must still work then).
+    final schedule = await _orderStatusPollSchedule();
     for (var attempt = 0; attempt < _maxPollAttempts; attempt++) {
-      await Future.delayed(_pollInterval);
+      await Future.delayed(schedule?.next() ?? _pollInterval);
       if (!mounted) {
         return;
       }
@@ -377,6 +475,22 @@ class _PlanCardState extends ConsumerState<_PlanCard> {
         });
         return;
       }
+    }
+  }
+
+  Future<HgfastDecorrelatedJitterSchedule?> _orderStatusPollSchedule() async {
+    final result = await ref.read(hgfastRepositoryProvider).config();
+    final policyJson = result.successValue?.values['poll_policy'];
+    if (policyJson is! Map) {
+      return null;
+    }
+    try {
+      final policy = HgfastPollPolicy.fromJson(
+        policyJson.map((key, value) => MapEntry('$key', value)),
+      );
+      return HgfastDecorrelatedJitterSchedule(policy: policy.orderStatus);
+    } on FormatException {
+      return null;
     }
   }
 
@@ -399,9 +513,27 @@ class _PlanCardState extends ConsumerState<_PlanCard> {
                 ),
               ),
               const SizedBox(width: 8),
-              HgPillBadge(label: '${plan.transferGb} GB/月'),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.end,
+                children: [
+                  HgPillBadge(label: '${plan.transferGb} GB/月'),
+                  if (plan.speedLimitMbps != null)
+                    HgPillBadge(label: '${plan.speedLimitMbps}Mbps'),
+                ],
+              ),
             ],
           ),
+          if (plan.subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              plan.subtitle!,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colorScheme.primary,
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Text(
             plan.deviceLimit != null ? '最多可用设备 ${plan.deviceLimit} 台' : '设备数不限',
@@ -409,6 +541,10 @@ class _PlanCardState extends ConsumerState<_PlanCard> {
               color: context.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (plan.features.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _PlanFeatureList(features: plan.features),
+          ],
           const SizedBox(height: 16),
           if (plan.prices.isEmpty)
             Text('暂无可选购买周期', style: context.textTheme.bodyMedium)
