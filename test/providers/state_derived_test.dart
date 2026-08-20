@@ -62,11 +62,20 @@ void main() {
     final mobile = container.read(currentNavigationItemsStateProvider).value;
     expect(
       mobile.map((item) => item.label),
-      containsAll([PageLabel.dashboard, PageLabel.profiles, PageLabel.tools]),
+      containsAll([PageLabel.connect, PageLabel.discover, PageLabel.account]),
     );
     expect(
       mobile.map((item) => item.label),
-      isNot(contains(PageLabel.connections)),
+      isNot(
+        contains(
+          anyOf([
+            PageLabel.dashboard,
+            PageLabel.profiles,
+            PageLabel.tools,
+            PageLabel.connections,
+          ]),
+        ),
+      ),
     );
 
     container
@@ -106,7 +115,7 @@ void main() {
     expect(dashboard.dashboardWidgets, isNotEmpty);
 
     final actions = container.read(proxiesActionsStateProvider);
-    expect(actions.pageLabel, PageLabel.dashboard);
+    expect(actions.pageLabel, PageLabel.connect);
     expect(actions.hasProviders, isFalse);
     expect(actions.type, ProxiesType.tab);
   });
@@ -312,7 +321,7 @@ void main() {
       container.read(realTestUrlProvider('https://custom.test')),
       'https://custom.test',
     );
-    expect(container.read(isCurrentPageProvider(PageLabel.dashboard)), isTrue);
+    expect(container.read(isCurrentPageProvider(PageLabel.connect)), isTrue);
     expect(
       container.read(
         isCurrentPageProvider(

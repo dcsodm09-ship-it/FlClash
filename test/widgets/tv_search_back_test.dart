@@ -121,6 +121,11 @@ void main() {
     addTearDown(container.dispose);
     globalState.container = container;
     container.read(viewSizeProvider.notifier).value = const Size(1200, 800);
+    // Make the dashboard page (the one carrying the search bar) the active
+    // one — CurrentPageLabel's own default (connect) isn't one of this
+    // test's two synthetic items, and an inactive page's search field
+    // can't pick up focus (see PageActivityScope/ExcludeFocus in home.dart).
+    container.read(currentPageLabelProvider.notifier).toPage(PageLabel.dashboard);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(

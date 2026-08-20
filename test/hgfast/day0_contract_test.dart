@@ -284,13 +284,17 @@ void main() {
     expect(slots.every((item) => item.keep == false), isTrue);
     expect(slots.every((item) => item.path != null), isTrue);
     expect(slots.every((item) => item.modes.isEmpty), isTrue);
+    // support is desktop-only as of the "更多"-drawer redesign (mobile
+    // reaches it via the Connect access-gate's contact-support CTA, which
+    // pushes it directly instead of switching tabs — see
+    // CurrentPageLabel.toPage) — connect/discover/account are still the
+    // three labels every mode must carry.
     expect(
       enabledSlots
           .where(
             (item) => {
               PageLabel.connect,
               PageLabel.discover,
-              PageLabel.support,
               PageLabel.account,
             }.contains(item.label),
           )
@@ -301,6 +305,12 @@ void main() {
             ]),
           ),
       isTrue,
+    );
+    expect(
+      enabledSlots
+          .firstWhere((item) => item.label == PageLabel.support)
+          .modes,
+      [NavigationItemMode.desktop],
     );
   });
 

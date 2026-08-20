@@ -450,7 +450,7 @@ final class ProfilesActionProvider
   }
 }
 
-String _$profilesActionHash() => r'e67a3e4a98c1b3b668275721491a2b0318d27550';
+String _$profilesActionHash() => r'70a7ee0a95a352884a315fc31e6d483a64eecf5d';
 
 abstract class _$ProfilesAction extends $Notifier<void> {
   void build();
@@ -606,7 +606,7 @@ final class HgfastSyncActionProvider
   }
 }
 
-String _$hgfastSyncActionHash() => r'3661792dba5952381aecd40be0bac68e9e7fa5ec';
+String _$hgfastSyncActionHash() => r'e2edb735b3f0a716e61959d8b138d189177620b9';
 
 abstract class _$HgfastSyncAction extends $Notifier<void> {
   void build();

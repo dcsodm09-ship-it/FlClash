@@ -7,6 +7,7 @@ import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/state.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wifi_ssid/wifi_ssid.dart';
@@ -185,11 +186,50 @@ class CurrentPageLabel extends _$CurrentPageLabel
     with AutoDisposeNotifierMixin {
   @override
   PageLabel build() {
-    return PageLabel.dashboard;
+    return PageLabel.connect;
   }
 
+  // A handful of labels (dashboard/profiles/tools/support/vip/invite —
+  // see pushablePage) are desktop-only, reachable on mobile only through
+  // the "更多" drawer or an access-gate CTA. Setting `value` to one of
+  // these while mobile would silently no-op in the mode-filtered PageView
+  // (see _HomePageViewState._toPage) while also desyncing
+  // navigationState's currentIndex (falls back to 0) and isCurrentPage —
+  // so route only THESE labels through a push instead of the tab switch
+  // when they're not in the current mode's navigationItems. Every other
+  // label (including the `more`-mode-only ones like resources/requests)
+  // keeps the original unconditional `value = pageLabel` — those aren't
+  // pushable pages, and their own consumers already treat "current but
+  // not in navigationItems" as fine (that's what `more` mode is for).
   void toPage(PageLabel pageLabel) {
-    value = pageLabel;
+    final page = pushablePage(pageLabel);
+    if (page == null) {
+      value = pageLabel;
+      return;
+    }
+    final reachable = ref
+        .read(currentNavigationItemsStateProvider)
+        .value
+        .any((item) => item.label == pageLabel);
+    if (reachable) {
+      value = pageLabel;
+      return;
+    }
+    // Not BaseNavigator.push(context, ...): that does Navigator.of(context),
+    // which walks UP from context looking for an ANCESTOR Navigator —
+    // navigatorKey.currentContext IS the root Navigator's own element, so
+    // that search finds nothing (or the wrong one) instead of pushing
+    // here. currentState is the actual NavigatorState to push onto.
+    final navigator = globalState.navigatorKey.currentState;
+    if (navigator == null) {
+      return;
+    }
+    final isMobile = ref.read(isMobileViewProvider);
+    navigator.push(
+      isMobile
+          ? CommonRoute(builder: (_) => page)
+          : CommonDesktopRoute(builder: (_) => page),
+    );
   }
 
   void toProfiles() {

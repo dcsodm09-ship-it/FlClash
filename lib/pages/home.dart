@@ -125,13 +125,20 @@ class HomePage extends ConsumerWidget {
                   ),
                 ],
               );
-              if (moreItems.isEmpty) {
-                return content;
-              }
+              // Always Scaffold, never bare `content` — the drawer is the
+              // only thing that varies with `moreItems`. Swapping the
+              // widget TYPE at this position based on isMobile (as an
+              // earlier version of this did) tears down and rebuilds the
+              // whole subtree on every breakpoint crossing: the PageView's
+              // PageController, every KeepScope-kept page, and each
+              // desktop tab's nested Navigator all lose their state, and
+              // an in-flight AnimatedVisibility transition gets cut short
+              // instead of finishing. See test/pages/home_test.dart's
+              // "screen-size transition" test.
               return Scaffold(
                 key: _scaffoldKey,
                 backgroundColor: Colors.transparent,
-                drawer: _MoreDrawer(items: moreItems),
+                drawer: moreItems.isEmpty ? null : _MoreDrawer(items: moreItems),
                 body: content,
               );
             },
@@ -224,9 +231,17 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
     }
   }
 
+  // Falls back to 0 rather than -1 when currentPageLabelProvider's value
+  // isn't in this mode's navigationItems (e.g. desktop-only labels while
+  // mobile) — PageController(initialPage: -1) doesn't crash outright, but
+  // the first frame can render with nothing laid out until a later scroll
+  // settles the clamp, same class of bug as the Scaffold-type-swap above.
   int get _pageIndex {
     final pageLabel = ref.read(currentPageLabelProvider);
-    return widget.navigationItems.indexWhere((item) => item.label == pageLabel);
+    final index = widget.navigationItems.indexWhere(
+      (item) => item.label == pageLabel,
+    );
+    return index == -1 ? 0 : index;
   }
 
   Future<void> _toPage(
@@ -378,7 +393,9 @@ class HomeBackScopeContainer extends ConsumerWidget {
 // No ListItem.open here: it hardcodes onTap to null (see lib/widgets/list.dart),
 // so it can't close this Drawer before pushing. Plain ListTile + BaseNavigator.push
 // mirrors the pattern account_view.dart's _ListRow already uses for the same
-// "row that opens another screen" need.
+// "row that opens another screen" need. Pushes `pushablePage(item.label)`
+// (keyless) rather than `item.builder(context)` (carries a
+// GlobalObjectKey(label)) — see navigation.dart's pushablePage doc for why.
 class _MoreDrawer extends StatelessWidget {
   final List<NavigationItem> items;
 
@@ -409,7 +426,10 @@ class _MoreDrawer extends StatelessWidget {
                     : null,
                 onTap: () {
                   Navigator.of(context).pop();
-                  BaseNavigator.push(context, item.builder(context));
+                  BaseNavigator.push(
+                    context,
+                    pushablePage(item.label) ?? item.builder(context),
+                  );
                 },
               ),
           ],

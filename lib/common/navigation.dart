@@ -196,3 +196,23 @@ class Navigation {
 }
 
 final navigation = Navigation();
+
+// Keyless counterparts of the pages `Navigation.getItems()` builds with a
+// `GlobalObjectKey(label)` baked in. Anything pushed outside the PageView
+// (the "更多" drawer, CurrentPageLabel.toPage's reachability fallback) must
+// use these instead of `NavigationItem.builder` — reusing the keyed builder
+// risks a duplicate-GlobalKey collision if the same label re-enters the
+// PageView later (e.g. resizing across the mobile/desktop breakpoint while
+// the pushed route is still open). Mirrors the keyless-push pattern
+// account_view.dart's _ListRow already uses for the same reason.
+Widget? pushablePage(PageLabel label) {
+  return switch (label) {
+    PageLabel.dashboard => const DashboardView(),
+    PageLabel.profiles => const ProfilesView(),
+    PageLabel.tools => const ToolsView(),
+    PageLabel.support => const SupportView(),
+    PageLabel.vip => const VipView(),
+    PageLabel.invite => const InviteView(),
+    _ => null,
+  };
+}

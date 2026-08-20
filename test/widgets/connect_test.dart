@@ -4,6 +4,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/hgfast/models/error.dart';
 import 'package:fl_clash/hgfast/models/node.dart';
 import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/pages/support/support_view.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/hgfast/nodes.dart';
@@ -339,8 +340,15 @@ void main() {
       expect(find.text('Contact support'), findsOneWidget);
 
       await tester.tap(find.text('Contact support'));
-      await tester.pump();
-      expect(container.read(currentPageLabelProvider), PageLabel.support);
+      // pumpAndSettle, not pump: the pushed route stays Offstage (and so
+      // invisible to find.byType's default skipOffstage) until its enter
+      // transition finishes.
+      await tester.pumpAndSettle();
+      // Support is desktop-only in navigationItems (unreachable in the
+      // mobile tab bar), so the CTA pushes it directly instead of flipping
+      // currentPageLabelProvider — see CurrentPageLabel.toPage.
+      expect(container.read(currentPageLabelProvider), PageLabel.connect);
+      expect(find.byType(SupportView), findsOneWidget);
       expect(tester.takeException(), null);
     },
   );
@@ -415,8 +423,22 @@ void main() {
     expect(find.text('Contact support'), findsOneWidget);
 
     await tester.tap(find.text('Contact support'));
-    await tester.pump();
-    expect(container.read(currentPageLabelProvider), PageLabel.support);
+    // pumpAndSettle, not pump: the pushed route stays Offstage (and so
+    // invisible to find.byType's default skipOffstage) until its enter
+    // transition finishes.
+    await tester.pumpAndSettle();
+    // Default Size.zero viewSize resolves to mobile, where support is
+    // unreachable in the tab bar — the CTA pushes it instead of flipping
+    // currentPageLabelProvider (see CurrentPageLabel.toPage), so the
+    // underlying Connect screen (with its Retry button) stays mounted.
+    expect(container.read(currentPageLabelProvider), PageLabel.connect);
+    expect(find.byType(SupportView), findsOneWidget);
+
+    // Back out of the pushed Support route before exercising Retry — it's
+    // now covered by Support, same as a real user backing out first.
+    globalState.navigatorKey.currentState?.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(SupportView), findsNothing);
 
     await tester.tap(find.text('Retry'));
     await tester.pump();

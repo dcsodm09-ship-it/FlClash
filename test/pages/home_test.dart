@@ -156,7 +156,9 @@ void main() {
       );
       await tester.tap(outgoingTools, warnIfMissed: false);
       await tester.pump();
-      expect(container.read(currentPageLabelProvider), PageLabel.dashboard);
+      // The tapped icon is exiting/no longer hit-testable, so this is a
+      // miss — state stays at CurrentPageLabel's default (connect).
+      expect(container.read(currentPageLabelProvider), PageLabel.connect);
 
       await tester.pump(const Duration(milliseconds: 301));
       expect(find.byType(NavigationRail), findsNothing);
@@ -588,6 +590,11 @@ void main() {
     addTearDown(container.dispose);
     globalState.container = container;
     container.read(viewSizeProvider.notifier).value = const Size(500, 800);
+    // Make the dashboard page (the one carrying the search bar) the active
+    // one — CurrentPageLabel's own default (connect) isn't one of this
+    // test's two synthetic items, and an inactive page's search field
+    // can't pick up focus (see PageActivityScope/ExcludeFocus in home.dart).
+    container.read(currentPageLabelProvider.notifier).toPage(PageLabel.dashboard);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -648,6 +655,9 @@ void main() {
     addTearDown(container.dispose);
     globalState.container = container;
     container.read(viewSizeProvider.notifier).value = const Size(1200, 800);
+    // Same as the mobile search test above: make dashboard the active page
+    // so its content isn't excluded from focus.
+    container.read(currentPageLabelProvider.notifier).toPage(PageLabel.dashboard);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(

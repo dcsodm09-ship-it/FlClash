@@ -106,7 +106,7 @@ class ProfilesAction extends _$ProfilesAction {
     if (globalState.navigatorKey.currentState?.canPop() ?? false) {
       globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
-    ref.read(currentPageLabelProvider.notifier).value = PageLabel.profiles;
+    ref.read(currentPageLabelProvider.notifier).toProfiles();
     final profile = await globalState.loadingRun(
       tag: LoadingTag.profiles,
       () async {
