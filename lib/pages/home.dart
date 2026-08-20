@@ -217,11 +217,48 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _pageIndex);
+    final pageLabel = ref.read(currentPageLabelProvider);
+    final index = widget.navigationItems.indexWhere(
+      (item) => item.label == pageLabel,
+    );
+    _pageController = PageController(initialPage: index == -1 ? 0 : index);
+    if (index == -1) {
+      // A fresh State can be built directly onto an unreachable label —
+      // e.g. the window was minimized (HomePage returns SizedBox.shrink,
+      // disposing this State) while on a desktop-only page, then restored
+      // below the mobile breakpoint. _pageController above already shows
+      // page 0; reconcile currentPageLabelProvider to match, same as
+      // _toPage's -1 branch — otherwise every page computes isActive:false
+      // (label matches nothing in navigationItems), excluding focus and
+      // breaking the back layer until the user taps a tab.
+      _reconcileUnreachableLabel(0, pageLabel);
+    }
     ref.listenManual(currentPageLabelProvider, (prev, next) {
       if (prev != next) {
         _toPage(next);
       }
+    });
+  }
+
+  // Schedules currentPageLabelProvider to catch up to whatever page is
+  // actually being displayed at `displayedIndex`, when `triedLabel` (the
+  // label that was supposed to show but isn't in navigationItems) differs
+  // from it. Deferred to a post-frame callback since both call sites can
+  // run from a widget lifecycle method (initState/didUpdateWidget), and
+  // Riverpod forbids modifying a provider synchronously from one.
+  void _reconcileUnreachableLabel(int displayedIndex, PageLabel triedLabel) {
+    if (widget.navigationItems.isEmpty) {
+      return;
+    }
+    final shownLabel = widget.navigationItems[displayedIndex].label;
+    if (shownLabel == triedLabel) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      ref.read(currentPageLabelProvider.notifier).toPage(shownLabel);
     });
   }
 
@@ -231,19 +268,6 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
     if (oldWidget.navigationItems.length != widget.navigationItems.length) {
       _updatePageController();
     }
-  }
-
-  // Falls back to 0 rather than -1 when currentPageLabelProvider's value
-  // isn't in this mode's navigationItems (e.g. desktop-only labels while
-  // mobile) — PageController(initialPage: -1) doesn't crash outright, but
-  // the first frame can render with nothing laid out until a later scroll
-  // settles the clamp, same class of bug as the Scaffold-type-swap above.
-  int get _pageIndex {
-    final pageLabel = ref.read(currentPageLabelProvider);
-    final index = widget.navigationItems.indexWhere(
-      (item) => item.label == pageLabel,
-    );
-    return index == -1 ? 0 : index;
   }
 
   Future<void> _toPage(
@@ -261,34 +285,24 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
       // the user was on a desktop-only page (dashboard/profiles/tools/
       // support/vip/docs/plans) and the window shrank below the mobile
       // breakpoint. Returning early here (the old behavior) left
-      // _pageController holding a scroll offset computed against the OLD,
-      // larger item count/viewport — on the real desktop nav (12 items)
-      // that's up to ~5 viewports past the new end, so the pane renders
-      // fully blank for the first ~20 frames, then settles on whatever
-      // page that stale offset happens to clamp to (not necessarily
-      // index 0), while navigationState's own currentIndex (used by the
-      // bottom bar/rail) already falls back to 0 independently — the two
-      // disagree indefinitely until the user taps a tab. Clamp the
-      // PageController to 0 AND reconcile currentPageLabelProvider so
-      // both the visible page and the highlighted tab settle on the same,
-      // now-reachable page instead of drifting apart.
+      // _pageController holding a scroll offset computed to preserve the
+      // OLD page *index* against the NEW, smaller item count/viewport —
+      // if that index is still in range for the new list it silently
+      // shows a different, unrelated page with no visual cue at all; if
+      // it's now out of range (e.g. the old page was near the end of a
+      // long desktop nav) it can overscroll many viewports past the new
+      // end, rendering blank for dozens of frames before settling.
+      // navigationState's own currentIndex (used by the bottom bar/rail)
+      // already falls back to 0 independently of any of this, so the
+      // highlighted tab and the visible page disagree indefinitely until
+      // the user taps a tab. Clamp the PageController to 0 AND reconcile
+      // currentPageLabelProvider so both settle on the same, now-reachable
+      // page instead of drifting apart.
       if (widget.navigationItems.isEmpty) {
         return;
       }
       index = 0;
-      final fallbackLabel = widget.navigationItems[0].label;
-      if (fallbackLabel != pageLabel) {
-        // Deferred to a post-frame callback: this branch can run from
-        // didUpdateWidget (a breakpoint-crossing resize changes
-        // navigationItems.length), and Riverpod forbids modifying a
-        // provider synchronously from a widget lifecycle method.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) {
-            return;
-          }
-          ref.read(currentPageLabelProvider.notifier).toPage(fallbackLabel);
-        });
-      }
+      _reconcileUnreachableLabel(0, pageLabel);
     }
     final isAnimateToPage = ref.read(appSettingProvider).isAnimateToPage;
     final isMobile = ref.read(isMobileViewProvider);

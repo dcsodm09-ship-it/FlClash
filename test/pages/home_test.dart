@@ -158,8 +158,12 @@ void main() {
       await tester.tap(outgoingTools, warnIfMissed: false);
       await tester.pump();
       // The tapped icon is exiting/no longer hit-testable, so this is a
-      // miss — state stays at CurrentPageLabel's default (connect).
-      expect(container.read(currentPageLabelProvider), PageLabel.connect);
+      // miss — state stays wherever initState's post-frame reconciliation
+      // already settled it. CurrentPageLabel's own default (connect) isn't
+      // one of this test's two synthetic items, so _HomePageViewState's
+      // initState reconciled it to page 0's label (dashboard) shortly
+      // after mount — see _reconcileUnreachableLabel in home.dart.
+      expect(container.read(currentPageLabelProvider), PageLabel.dashboard);
 
       await tester.pump(const Duration(milliseconds: 301));
       expect(find.byType(NavigationRail), findsNothing);
@@ -289,6 +293,55 @@ void main() {
       // pane) while the bottom bar's own currentIndex fallback already
       // showed a different page. Both should now agree on the same,
       // reachable page instead of drifting apart indefinitely.
+      expect(find.byType(NavigationBar), findsOneWidget);
+      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+      final settledLabel = container.read(currentPageLabelProvider);
+      expect(settledLabel, isNot(PageLabel.profiles));
+      final mobileItems = container
+          .read(currentNavigationItemsStateProvider)
+          .value;
+      expect(mobileItems[navBar.selectedIndex].label, settledLabel);
+    },
+  );
+
+  testWidgets(
+    'building fresh at mobile width on a desktop-only page reconciles state',
+    (tester) async {
+      tester.view.physicalSize = const Size(380, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final profile = Profile.normal();
+      final container = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(() => _HomeTestProfiles([profile])),
+          currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+          versionProvider.overrideWithBuild((_, _) => 15),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.read(viewSizeProvider.notifier).value = const Size(380, 900);
+      // Simulates persisted state restored directly onto an unreachable
+      // label (buildAppStateOverrides in lib/providers/app.dart does
+      // exactly this from a saved AppState.pageLabel — no toPage() call
+      // involved) rather than a live navigation — exercises
+      // _HomePageViewState.initState's own reconciliation path for a
+      // State built directly onto an unreachable label, as opposed to the
+      // resize test above (a live State going through didUpdateWidget).
+      container.read(currentPageLabelProvider.notifier).value =
+          PageLabel.profiles;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: HomePage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
       expect(find.byType(NavigationBar), findsOneWidget);
       final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
       final settledLabel = container.read(currentPageLabelProvider);
