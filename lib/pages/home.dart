@@ -5,6 +5,7 @@ import 'package:fl_clash/models/common.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -265,7 +266,20 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
   @override
   void didUpdateWidget(covariant _HomePageView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.navigationItems.length != widget.navigationItems.length) {
+    // Not just a length check: two conditional desktop-only items
+    // (proxies/hasProxies, logs/openLogs) can flip in opposite directions
+    // within the same rebuild — e.g. BackupAction.restore(all) sets mode
+    // (proxies leaves) and openLogs (logs enters) back-to-back with no
+    // await between them — keeping the count identical while the actual
+    // labels/positions shift. A length-only guard misses that: the page
+    // controller never re-syncs, and if the current label just moved to a
+    // different index (rather than leaving the list entirely), the
+    // PageView shows a different page than what the tab/state agree on
+    // with no -1 ever occurring to trigger the reconcile in _toPage.
+    if (!listEquals(
+      oldWidget.navigationItems.map((item) => item.label).toList(),
+      widget.navigationItems.map((item) => item.label).toList(),
+    )) {
       _updatePageController();
     }
   }
@@ -283,8 +297,9 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
     if (index == -1) {
       // pageLabel just left this mode's navigationItems — most commonly
       // the user was on a desktop-only page (dashboard/profiles/tools/
-      // support/vip/docs/plans) and the window shrank below the mobile
-      // breakpoint. Returning early here (the old behavior) left
+      // support/vip/docs/plans/requests/connections/logs) and the window
+      // shrank below the mobile breakpoint. Returning early here (the old
+      // behavior) left
       // _pageController holding a scroll offset computed to preserve the
       // OLD page *index* against the NEW, smaller item count/viewport —
       // if that index is still in range for the new list it silently

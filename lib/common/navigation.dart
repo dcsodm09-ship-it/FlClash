@@ -212,6 +212,12 @@ Widget? pushablePage(PageLabel label) {
     PageLabel.support => const SupportView(),
     PageLabel.vip => const VipView(),
     PageLabel.invite => const InviteView(),
+    // plans/docs are also desktop-only (see getItems() above) and are
+    // real toPage() targets — connect.dart's access-gate "View Plans" CTA
+    // calls toPage(PageLabel.plans) unconditionally, not just on desktop.
+    // Without an entry here that CTA silently did nothing on mobile.
+    PageLabel.plans => const PlansView(),
+    PageLabel.docs => const DocsView(),
     _ => null,
   };
 }

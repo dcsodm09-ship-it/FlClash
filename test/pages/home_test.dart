@@ -16,6 +16,7 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -350,6 +351,87 @@ void main() {
           .read(currentNavigationItemsStateProvider)
           .value;
       expect(mobileItems[navBar.selectedIndex].label, settledLabel);
+    },
+  );
+
+  testWidgets(
+    'same-length navigationItems content change resyncs page, tab, and '
+    'state',
+    (tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      // Two conditional desktop-only items (proxies/hasProxies,
+      // logs/openLogs — see navigation.dart) can flip in opposite
+      // directions within one rebuild — e.g.
+      // lib/providers/actions/backup.dart's restore(all) sets mode
+      // (proxies leaves) and openLogs (logs enters) back-to-back with no
+      // await between. _phase stands in for that: same item COUNT in both
+      // phases, only which item occupies slot 1 changes.
+      final phase = StateProvider<int>((ref) => 0);
+      final container = ProviderContainer(
+        overrides: [
+          navigationItemsStateProvider.overrideWith((ref) {
+            final proxiesGone = ref.watch(phase) != 0;
+            return NavigationItemsState(
+              value: [
+                NavigationItem(
+                  icon: const Icon(Icons.space_dashboard),
+                  label: PageLabel.dashboard,
+                  builder: (_) =>
+                      const SizedBox(key: ValueKey('dashboard-page')),
+                ),
+                proxiesGone
+                    ? NavigationItem(
+                        icon: const Icon(Icons.adb),
+                        label: PageLabel.logs,
+                        builder: (_) =>
+                            const SizedBox(key: ValueKey('logs-page')),
+                      )
+                    : NavigationItem(
+                        icon: const Icon(Icons.article),
+                        label: PageLabel.proxies,
+                        builder: (_) =>
+                            const SizedBox(key: ValueKey('proxies-page')),
+                      ),
+              ],
+            );
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.read(viewSizeProvider.notifier).value = const Size(1400, 1000);
+      container
+          .read(currentPageLabelProvider.notifier)
+          .toPage(PageLabel.proxies);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(child: HomePage()),
+        ),
+      );
+      await tester.pump();
+      expect(container.read(currentPageLabelProvider), PageLabel.proxies);
+
+      // Flip: proxies leaves, logs enters, same length (2) either way.
+      container.read(phase.notifier).state = 1;
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(tester.takeException(), isNull);
+
+      // proxies is gone — the PageController, the rail highlight, and
+      // currentPageLabelProvider must all agree on whatever page they
+      // settled on instead, not disagree with each other indefinitely.
+      expect(find.byType(NavigationRail), findsOneWidget);
+      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+      final settledLabel = container.read(currentPageLabelProvider);
+      expect(settledLabel, isNot(PageLabel.proxies));
+      final items = container.read(currentNavigationItemsStateProvider).value;
+      expect(items[rail.selectedIndex!].label, settledLabel);
     },
   );
 
